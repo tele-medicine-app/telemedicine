@@ -35,6 +35,26 @@ html, body {
   gap: 16px;
 }
 
+/* Landing Page Overlay - No Room Inputs */
+.landing-overlay {
+  position: fixed; inset: 0; background: var(--bg-app); z-index: 500;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.landing-card {
+  background: var(--panel); border-radius: 24px; max-width: 420px; width: 100%;
+  padding: 40px 32px; box-shadow: var(--shadow-island); border: 1px solid var(--border);
+  text-align: center; display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+.landing-card .medical { width: 56px; height: 56px; font-size: 26px; border-radius: 16px; }
+.landing-card h2 { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; }
+.landing-card p { font-size: 14px; color: var(--muted); line-height: 1.5; }
+.btn-join-direct {
+  width: 100%; padding: 16px; border-radius: 14px; background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark));
+  color: white; font-size: 16px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 6px 16px rgba(52,168,83,0.2);
+}
+.btn-join-direct:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(52,168,83,0.3); }
+
 /* Header Island */
 .header {
   height: 68px; flex: 0 0 68px; background: var(--panel); border-radius: 24px;
@@ -103,7 +123,6 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
   position: relative; z-index: 2;
 }
 
-/* Visualizer Animations */
 .live-pulse-container { position: relative; display: flex; align-items: center; justify-content: center; }
 .pulse-ring { position: absolute; width: 84px; height: 84px; border: 2px solid var(--meet-green-primary); border-radius: 26px; animation: visualPulse 2.5s infinite ease-out; opacity: 0; z-index: 1; }
 @keyframes visualPulse {
@@ -111,7 +130,6 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
   100% { transform: scale(1.4); opacity: 0; }
 }
 
-/* Spinner */
 .loading-spinner {
   width: 64px; height: 64px; border: 4px solid var(--border);
   border-top: 4px solid var(--meet-green-primary); border-radius: 50%;
@@ -221,7 +239,7 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 .icon-btn { background: transparent; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .send { background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); color: #fff; border: none; border-radius: 50%; width: 42px; height: 42px; cursor: pointer; flex-shrink: 0; }
 
-/* Prescription (Rx) Panel */
+/* Prescription Panel */
 .rx-form { padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; background: #fcfdfd; flex: 1; }
 .rx-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .rx-header h3 { font-size: 18px; color: var(--text); font-weight: 600; }
@@ -232,14 +250,12 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 .rx-input:focus { border-color: var(--meet-green-primary); }
 textarea.rx-input { resize: vertical; min-height: 80px; }
 
-/* Multi-Medication UI Additions */
 .med-group { background: #ffffff; border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 4px; position: relative; }
 .med-row-header { display: flex; justify-content: space-between; align-items: center; }
 .remove-med-btn { background: transparent; border: none; color: var(--red); font-weight: 600; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 2px; }
 .btn-add-med { background: var(--meet-green-light); color: var(--meet-green-dark); border: 1px dashed #cce8d6; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px; margin-bottom: 4px; transition: all 0.2s; }
 .btn-add-med:hover { background: #d0f0db; border-color: var(--meet-green-primary); transform: translateY(-1px); }
 
-/* Rx Actions */
 .rx-action-deck { display: flex; gap: 12px; margin-top: 10px; }
 .btn-primary, .btn-secondary {
   flex: 1; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer;
@@ -263,7 +279,7 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
 .print-action-btn { background: var(--meet-green-primary); color: white; }
 .close-lightbox-btn { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
 
-/* Custom Modals */
+/* Modals */
 .custom-modal-overlay {
   position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(8px); z-index: 400; display: none;
@@ -283,9 +299,7 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
 .custom-modal-card p { font-size: 15px; color: var(--text); line-height: 1.5; margin-bottom: 24px; font-weight: 500; }
 .custom-modal-actions { display: flex; justify-content: center; gap: 12px; }
 
-/* ========================================================== */
-/* CRITICAL MOBILE UI FIXES (PRESERVES PERFECT WEB WORKSPACE) */
-/* ========================================================== */
+/* Mobile View Adjustments */
 @media(max-width: 900px) {
   body { padding: 8px; gap: 8px; }
   .header { padding: 0 14px; height: 56px; border-radius: 16px; }
@@ -294,7 +308,6 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
   .connection { padding: 6px 12px; font-size: 11px; }
   .main { grid-template-columns: 1fr; }
   
-  /* EXCLUSIVE 100% VISUAL VIEWPORT MOBILE DRAWER FIX */
   .sidebar-panel {
     position: fixed;
     left: 0;
@@ -318,7 +331,6 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
     pointer-events: none;
   }
   
-  /* View Container scaling context rules */
   .view-container.active {
     display: flex;
     flex: 1;
@@ -329,7 +341,6 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
   .sidebar-header { padding: 12px 16px; flex-shrink: 0; }
   .tab-btn { padding: 8px 16px; font-size: 14px; }
   
-  /* Messages and scrolling setup */
   .messages { 
     flex: 1; 
     padding: 16px; 
@@ -339,7 +350,6 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
   }
   .msg { padding: 12px 14px; font-size: 13px; max-width: 90%; }
   
-  /* Absolute typing box hardware safety fitments */
   .chat-input-area { 
     flex-shrink: 0;
     padding: 12px 16px; 
@@ -370,6 +380,18 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
 </style>
 </head>
 <body class="chat-open">
+
+<div class="landing-overlay" id="landingPage">
+  <div class="landing-card">
+    <div class="medical">☤</div>
+    <div>
+      <p style="color: var(--meet-green-primary); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Telehealth Secure Networks</p>
+      <h2>Clinical Workspace</h2>
+    </div>
+    <p>Review patient analytics, drop secure files, and host real-time medical group consultations in an isolated sandbox pipeline.</p>
+    <button type="button" class="btn-join-direct" id="startSessionBtn">Join Workspace</button>
+  </div>
+</div>
 
 <header class="header">
   <div class="brand">
@@ -504,7 +526,6 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
 </div>
 
 <script>
-// UI Setup Handlers
 const videoGrid = document.getElementById('videoGrid');
 const micBtn = document.getElementById('micBtn');
 const camBtn = document.getElementById('camBtn');
@@ -514,10 +535,12 @@ const hangBtn = document.getElementById('hangBtn');
 const statusText = document.getElementById('statusText');
 const sidebarDrawer = document.getElementById('sidebarDrawer');
 const messages = document.getElementById('messages');
+const startSessionBtn = document.getElementById('startSessionBtn');
+const landingPage = document.getElementById('landingPage');
 
 let stream = null; let micOn = true; let camOn = true;
 
-// MOBILE VIRTUAL KEYBOARD GRAPHICAL VIEWPORT RESIZER ENGINE
+// Mobile View Adjuster Engine
 function handleMobileViewHeight() {
   if (window.innerWidth <= 900) {
     if (!document.body.classList.contains('chat-collapsed') && window.visualViewport) {
@@ -535,14 +558,14 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('scroll', handleMobileViewHeight);
 }
 
-// FORCE CLOSED BY DEFAULT ONLY ON MOBILE INITIAL LOAD
+// Initial Mobile Load Workspace Visibility Layout Look
 if (window.innerWidth <= 900) {
   document.body.classList.add('chat-collapsed');
   document.body.classList.remove('chat-open');
   chatBtn.classList.remove('active-chat');
 }
 
-// Custom Modals Core Handlers
+// Alerts / Confirm Logic
 let currentConfirmAction = null;
 
 function showCustomAlert(message) {
@@ -613,15 +636,16 @@ function createParticipantTile(name, type = 'remote', streamObject = null) {
 }
 
 function initializePeerConnection(roomId) {
-  console.log("Initializing web client handshake inside room context ID:", roomId);
+  console.log("Initializing sync handshakes for common context ID:", roomId);
   if (typeof Peer !== 'undefined') {
     const peer = new Peer();
-    peer.on('open', (id) => console.log('Peer assigned hash identifier key:', id));
+    peer.on('open', (id) => console.log('Peer node verified with runtime identifier key:', id));
   }
 }
 
-// Auto-run single context connection loop directly on launch
-window.addEventListener('DOMContentLoaded', async () => {
+// Single Action Common Workspace Router Trigger 
+startSessionBtn.addEventListener('click', async () => {
+  landingPage.style.display = 'none';
   const name = "Doctor";
   videoGrid.innerHTML = '';
 
@@ -632,7 +656,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       throw new Error('Sandbox context lock error');
     }
   } catch (e) { 
-    console.warn('Hardware stream initialization warning. Loading workspace graphical simulators.'); 
+    console.warn('Hardware pipeline stream simulation active.'); 
   }
 
   document.body.classList.add('joined');
@@ -656,7 +680,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   
   videoGrid.appendChild(remoteObj.tile); 
   videoGrid.appendChild(localObj.tile);
-  initializePeerConnection('telehealth-default-room');
+  initializePeerConnection('telehealth-shared-common-room');
 });
 
 micBtn.addEventListener('click', () => { if(!stream) return; micOn = !micOn; stream.getAudioTracks().forEach(t => t.enabled = micOn); micBtn.classList.toggle('off', !micOn); });
@@ -673,7 +697,6 @@ function toggleChatPanel() {
 chatBtn.addEventListener('click', toggleChatPanel);
 closeChatBtn.addEventListener('click', toggleChatPanel);
 
-// Sidebar Tabs Controls
 const tabChatBtn = document.getElementById('tabChatBtn');
 const tabRxBtn = document.getElementById('tabRxBtn');
 const viewChat = document.getElementById('viewChat');
@@ -695,10 +718,11 @@ hangBtn.addEventListener('click', () => {
   if (stream) stream.getTracks().forEach(t => t.stop());
   document.body.classList.remove('joined');
   statusText.textContent = 'Disconnected'; videoGrid.innerHTML = '';
-  showCustomAlert("Disconnected from workspace context.");
+  showCustomAlert("Session terminated.");
+  landingPage.style.display = 'flex';
 });
 
-// Chat Engine Core Form Logic
+// Chat Attachments Processing
 const photoInput = document.getElementById('photoInput');
 const triggerFileBtn = document.getElementById('triggerFileBtn');
 const uploadPreviewBar = document.getElementById('uploadPreviewBar');
@@ -775,7 +799,7 @@ document.getElementById('printImageBtn').addEventListener('click', () => {
   win.close();
 });
 
-// Medication Added Multi-Group Nodes Row Counter Engine
+// Medication Added Multi-Group Row Manager
 let medCount = 1;
 document.getElementById('addMedBtn').addEventListener('click', () => {
   medCount++;
@@ -803,7 +827,7 @@ document.getElementById('addMedBtn').addEventListener('click', () => {
   document.getElementById('rxMedsContainer').appendChild(group);
 });
 
-// Prescription Management Logic
+// Prescription Management Formatting Logic
 function getRxData() {
   const medGroups = document.querySelectorAll('.med-group');
   const medsList = [];
