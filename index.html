@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>Telehealth Workspace</title>
 <style>
-/* =========================================
-   BASE & WEB UI (UNTOUCHED PER INSTRUCTIONS)
-   ========================================= */
 :root {
   --bg-app: #f1f5f9;       
   --panel: #ffffff;        
@@ -24,19 +21,23 @@
   --shadow-sm: 0 4px 12px rgba(0,0,0,0.04);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Google Sans', Roboto, Arial, sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
   width: 100%; 
+  /* Fallback for older browsers */
   height: 100vh; 
+  /* Dynamic viewport height for mobile keyboards */
   height: 100dvh; 
   overflow: hidden;
-  background: var(--bg-app); 
+  background: var(--bg-app); font-family: 'Google Sans', Roboto, Arial, sans-serif;
   color: var(--text); display: flex; flex-direction: column; 
+  /* Safe area padding for notches and gesture bars */
   padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); 
   gap: 16px;
 }
 
+/* Header Island */
 .header {
   height: 68px; flex: 0 0 68px; background: var(--panel); border-radius: 24px;
   box-shadow: var(--shadow-sm); border: 1px solid var(--border); display: flex;
@@ -58,6 +59,7 @@ html, body {
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 2px rgba(234, 67, 53, 0.2); }
 body.joined .dot { background: var(--meet-green-primary); box-shadow: 0 0 0 2px rgba(52, 168, 83, 0.2); }
 
+/* Master Workspace Columns */
 .main {
   flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 16px; 
   overflow: hidden; position: relative;
@@ -103,30 +105,59 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
   position: relative; z-index: 2;
 }
 
+/* Premium Visualizer Animations */
 .live-pulse-container { position: relative; display: flex; align-items: center; justify-content: center; }
 .pulse-ring { position: absolute; width: 84px; height: 84px; border: 2px solid var(--meet-green-primary); border-radius: 26px; animation: visualPulse 2.5s infinite ease-out; opacity: 0; z-index: 1; }
-@keyframes visualPulse { 0% { transform: scale(0.8); opacity: 0.6; } 100% { transform: scale(1.4); opacity: 0; } }
+@keyframes visualPulse {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
 
+/* Professional Loading Spinner */
 .loading-spinner {
   width: 64px; height: 64px; border: 4px solid var(--border);
   border-top: 4px solid var(--meet-green-primary); border-radius: 50%;
   animation: professionalSpin 1s linear infinite; position: relative; z-index: 2;
 }
-@keyframes professionalSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes professionalSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 .tile.minimized .loading-spinner { width: 40px; height: 40px; border-width: 3px; }
 
 .placeholder h2 { font-size: 18px; font-weight: 600; color: var(--text); }
 .placeholder p { max-width: 320px; color: var(--muted); font-size: 13px; line-height: 1.5; }
 
-.top-pill { position: absolute; top: 20px; left: 20px; z-index: 2; padding: 8px 16px; border-radius: 999px; background: rgba(255,255,255,0.95); border: 1px solid var(--border); color: var(--meet-green-dark); font-size: 11px; font-weight: 700; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); }
-.user-tag { position: absolute; left: 20px; bottom: 20px; z-index: 2; display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-radius: 999px; background: rgba(255,255,255,.98); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
-.avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+.top-pill {
+  position: absolute; top: 20px; left: 20px; z-index: 2; padding: 8px 16px; border-radius: 999px;
+  background: rgba(255,255,255,0.95); border: 1px solid var(--border); color: var(--meet-green-dark);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.5px; box-shadow: var(--shadow-sm);
+}
+.user-tag {
+  position: absolute; left: 20px; bottom: 20px; z-index: 2; display: flex; align-items: center; gap: 12px;
+  padding: 10px 20px; border-radius: 999px; background: rgba(255,255,255,.98);
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark));
+  color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+}
 .info strong { font-size: 14px; display: block; color: var(--text); }
 .info span { font-size: 12px; color: var(--muted); display: block; }
 
+/* Premium Button Deck System */
 .footer-deck-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; height: 84px; flex: 0 0 84px; }
-.footer-deck { background: #ffffff; border: 1px solid rgba(226, 232, 240, 0.8); border-radius: 20px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.03); }
-.ctrl { width: 48px; height: 48px; border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff; color: #475569; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+.footer-deck {
+  background: #ffffff; border: 1px solid rgba(226, 232, 240, 0.8); border-radius: 20px;
+  padding: 10px 14px; display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+}
+.ctrl {
+  width: 48px; height: 48px; border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff;
+  color: #475569; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
 .ctrl:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.04); }
 .ctrl svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s; }
 .ctrl:hover svg { transform: scale(1.06); }
@@ -134,34 +165,57 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 .ctrl.active-chat { background: #f0fdf4 !important; border-color: #dcfce7 !important; color: #16a34a !important; }
 .ctrl.hang { width: 68px; border-radius: 14px; background: #ef4444 !important; border-color: #ef4444 !important; color: #ffffff !important; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25) !important; }
 
-.sidebar-panel { background: var(--panel); border-radius: 24px; box-shadow: var(--shadow-island); border: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; overflow: hidden; transition: transform 0.3s ease, opacity 0.3s ease; }
-.sidebar-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fcfdfd; }
+/* Chat & Rx Panel Layout */
+.sidebar-panel {
+  background: var(--panel); border-radius: 24px; box-shadow: var(--shadow-island);
+  border: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; overflow: hidden; 
+}
+.sidebar-header {
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center; background: #fcfdfd;
+}
 .tabs { display: flex; gap: 8px; background: var(--bg-app); padding: 4px; border-radius: 12px; border: 1px solid var(--border); }
-.tab-btn { border: none; background: transparent; padding: 12px 24px; border-radius: 8px; font-size: 16px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+.tab-btn {
+  border: none; background: transparent; padding: 12px 24px; border-radius: 8px;
+  font-size: 16px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.2s;
+}
 .tab-btn.active { background: #fff; color: var(--meet-green-dark); box-shadow: var(--shadow-sm); }
 .close-chat-btn { background: var(--bg-app); border: 1px solid var(--border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; color: var(--muted); }
 
+/* View Containers */
 .view-container { display: none; flex: 1; flex-direction: column; overflow: hidden; }
 .view-container.active { display: flex; }
 
+/* Chat specific */
 .messages { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
 .msg { padding: 14px 18px; border-radius: 20px; font-size: 14px; max-width: 85%; line-height: 1.5; word-wrap: break-word; box-shadow: var(--shadow-sm); }
 .system { border: 1px solid var(--border); color: var(--muted); background: var(--bg-app); align-self: center; font-size: 12px; text-align: center; border-radius: 999px; padding: 10px 20px; }
 .me { margin-left: auto; color: #fff; background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); border-bottom-right-radius: 4px; }
 .chat-img-wrap { margin-left: auto; max-width: 85%; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
 .chat-img-wrap img { max-width: 100%; border-radius: 16px; border: 1px solid var(--border); cursor: pointer; box-shadow: var(--shadow-sm); }
+.inline-print-btn { background: var(--panel); border: 1px solid var(--border); color: var(--muted); padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+.inline-print-btn:hover { background: var(--bg-app); color: var(--text); border-color: var(--muted); }
 
-.rx-chat-card { margin-left: auto; background: #ffffff; color: var(--text); border: 1px solid var(--meet-green-primary); border-radius: 16px; border-bottom-right-radius: 4px; padding: 0; box-shadow: 0 4px 12px rgba(52,168,83,0.15); width: 90%; overflow: hidden; }
-.rx-chat-header { background: var(--meet-green-light); padding: 12px 16px; font-weight: 600; color: var(--meet-green-dark); display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #cce8d6; }
+/* Prescription Chat Card */
+.rx-chat-card {
+  margin-left: auto; background: #ffffff; color: var(--text); border: 1px solid var(--meet-green-primary); 
+  border-radius: 16px; border-bottom-right-radius: 4px; padding: 0; box-shadow: 0 4px 12px rgba(52,168,83,0.15);
+  width: 90%; overflow: hidden;
+}
+.rx-chat-header {
+  background: var(--meet-green-light); padding: 12px 16px; font-weight: 600; color: var(--meet-green-dark);
+  display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #cce8d6;
+}
 .rx-chat-header .icon { font-size: 18px; font-family: serif; }
 .rx-chat-body { padding: 16px; font-size: 13px; display: flex; flex-direction: column; gap: 12px; }
 .rx-chat-body strong { color: var(--muted); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
 .rx-chat-footer { padding: 12px 16px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
-.rx-chat-footer .inline-print-btn { background: var(--meet-green-primary); color: white; border: none; padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.rx-chat-footer .inline-print-btn { background: var(--meet-green-primary); color: white; border: none; }
 .rx-chat-footer .inline-print-btn:hover { background: var(--meet-green-dark); transform: translateY(-1px); }
 
+/* Chat Input */
 .chat-input-area { padding: 20px 24px; border-top: 1px solid var(--border); background: #fcfdfd; }
-.upload-preview-bar { display: none; align-items: center; gap: 12px; background: varHom(--bg-app); padding: 10px 14px; border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--border); }
+.upload-preview-bar { display: none; align-items: center; gap: 12px; background: var(--bg-app); padding: 10px 14px; border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--border); }
 .preview-thumbnail { width: 44px; height: 44px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); }
 .remove-preview-btn { background: var(--text); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; }
 .input-wrap { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 24px; padding: 6px 6px 6px 14px; }
@@ -169,29 +223,41 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 .icon-btn { background: transparent; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; }
 .send { background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); color: #fff; border: none; border-radius: 50%; width: 42px; height: 42px; cursor: pointer; }
 
+/* Prescription (Rx) specific */
 .rx-form { padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; background: #fcfdfd; flex: 1; }
 .rx-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .rx-header h3 { font-size: 18px; color: var(--text); font-weight: 600; }
 .rx-icon { width: 32px; height: 32px; background: var(--meet-green-light); color: var(--meet-green-dark); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
 .rx-field { display: flex; flex-direction: column; gap: 6px; }
 .rx-field label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.rx-input { padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 14px; background: var(--panel); outline: none; transition: border 0.2s; }
+.rx-input { padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 14px; font-family: inherit; background: var(--panel); outline: none; transition: border 0.2s; }
 .rx-input:focus { border-color: var(--meet-green-primary); }
 textarea.rx-input { resize: vertical; min-height: 80px; }
 
+/* Dynamic Multi-Medication UI Additions */
 .med-group { background: #ffffff; border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 4px; position: relative; }
 .med-row-header { display: flex; justify-content: space-between; align-items: center; }
 .remove-med-btn { background: transparent; border: none; color: var(--red); font-weight: 600; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 2px; }
 .btn-add-med { background: var(--meet-green-light); color: var(--meet-green-dark); border: 1px dashed #cce8d6; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px; margin-bottom: 4px; transition: all 0.2s; }
 .btn-add-med:hover { background: #d0f0db; border-color: var(--meet-green-primary); transform: translateY(-1px); }
 
+/* Rx Dual Actions */
 .rx-action-deck { display: flex; gap: 12px; margin-top: 10px; }
-.btn-primary, .btn-secondary { flex: 1; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; border: none; }
-.btn-primary { background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); color: white; box-shadow: 0 6px 16px rgba(52,168,83,0.2); }
+.btn-primary, .btn-secondary {
+  flex: 1; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; border: none;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); color: white;
+  box-shadow: 0 6px 16px rgba(52,168,83,0.2);
+}
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(52,168,83,0.3); }
-.btn-secondary { background: var(--bg-app); color: var(--meet-green-dark); border: 1px solid #cce8d6; }
+.btn-secondary {
+  background: var(--bg-app); color: var(--meet-green-dark); border: 1px solid #cce8d6;
+}
 .btn-secondary:hover { background: var(--meet-green-light); border-color: var(--meet-green-primary); transform: translateY(-2px); }
 
+/* Landing Background */
 .overlay { position: fixed; inset: 0; background: #f4f7fa; overflow: hidden; display: flex; align-items: center; justify-content: center; z-index: 200; }
 .overlay.hide { display: none; }
 .overlay-bg-decor { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
@@ -201,6 +267,7 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
 .blob-secondary { width: 650px; height: 650px; background: linear-gradient(135deg, rgba(19,115,51,0.7), rgba(66,133,244,0.5)); bottom: -15%; right: -10%; animation-delay: -6s; }
 @keyframes fluidPulse { 0% { transform: translate(0px, 0px) scale(1) rotate(0deg); } 33% { transform: translate(50px, 40px) scale(1.08) rotate(120deg); } 66% { transform: translate(-30px, 60px) scale(0.95) rotate(240deg); } 100% { transform: translate(0px, 0px) scale(1) rotate(360deg); } }
 
+/* Landing Card */
 .card { position: relative; z-index: 5; width: 90%; max-width: 480px; background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(20px); border-radius: 36px; border: 1px solid rgba(255, 255, 255, 0.65); padding: 56px 48px; box-shadow: 0 24px 64px -12px rgba(0,0,0,0.08); text-align: center; }
 .card-logo-container { display: flex; justify-content: center; margin-bottom: 28px; }
 .card-logo { width: 72px; height: 72px; border-radius: 22px; background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 36px; box-shadow: 0 12px 28px rgba(52,168,83,0.3); }
@@ -212,6 +279,7 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
 .join-box input:focus { background: #ffffff; border-color: var(--meet-green-primary); box-shadow: 0 0 0 4px var(--meet-green-light); }
 .join-box button { height: 60px; border-radius: 16px; border: none; background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); color: #fff; font-weight: 700; font-size: 17px; cursor: pointer; }
 
+/* Lightbox */
 .lightbox-overlay { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.98); z-index: 300; display: none; justify-content: center; align-items: center; flex-direction: column; }
 .lightbox-content { max-width: 85vw; max-height: 75vh; border-radius: 20px; box-shadow: var(--shadow-island); border: 1px solid var(--border); }
 .lightbox-controls { position: absolute; top: 32px; right: 32px; display: flex; gap: 16px; }
@@ -219,106 +287,37 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
 .print-action-btn { background: var(--meet-green-primary); color: white; }
 .close-lightbox-btn { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
 
-.custom-modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); z-index: 400; display: none; align-items: center; justify-content: center; padding: 20px; }
+/* Mobile-Ready Custom Application Dialog Popups Styling */
+.custom-modal-overlay {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px); z-index: 400; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+}
 .custom-modal-overlay.show { display: flex; }
-.custom-modal-card { background: var(--panel); border-radius: 24px; max-width: 400px; width: 100%; padding: 32px 24px; box-shadow: 0 24px 48px -12px rgba(0,0,0,0.18); border: 1px solid var(--border); text-align: center; animation: modalScaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
-@keyframes modalScaleIn { 0% { transform: scale(0.9) translateY(10px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+.custom-modal-card {
+  background: var(--panel); border-radius: 24px; max-width: 400px; width: 100%;
+  padding: 32px 24px; box-shadow: 0 24px 48px -12px rgba(0,0,0,0.18);
+  border: 1px solid var(--border); text-align: center;
+  animation: modalScaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes modalScaleIn {
+  0% { transform: scale(0.9) translateY(10px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
 .custom-modal-card p { font-size: 15px; color: var(--text); line-height: 1.5; margin-bottom: 24px; font-weight: 500; }
 .custom-modal-actions { display: flex; justify-content: center; gap: 12px; }
 
-/* =========================================
-   MOBILE UI (BUILT FROM SCRATCH)
-   Triggered by .mobile-mode class and Media Queries
-   ========================================= */
-
-body.mobile-mode {
-  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
-  gap: 0;
-  background: #000; /* Dark background for mobile video stage */
+@media(max-width: 900px) {
+  body { padding: 12px; gap: 12px; }
+  .header { padding: 0 16px; height: 64px; border-radius: 20px; }
+  .main { grid-template-columns: 1fr; }
+  body.chat-open .sidebar-panel { position: fixed; right: 12px; top: 88px; bottom: 12px; z-index: 100; width: calc(100% - 24px); max-width: 420px; }
+  .tile.minimized { width: 140px; height: 79px; bottom: 12px; right: 12px; }
+  .user-tag, .top-pill { display: none !important; }
 }
-
-body.mobile-mode .header {
-  border-radius: 0;
-  border-left: none; border-right: none; border-top: none;
-  height: 60px;
-  flex: 0 0 60px;
-  padding: 0 12px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-}
-body.mobile-mode .brand h1 { font-size: 16px; }
-body.mobile-mode .logo { width: 32px; height: 32px; font-size: 16px; border-radius: 10px; }
-body.mobile-mode .connection { padding: 6px 12px; font-size: 12px; border: none; background: transparent; }
-
-body.mobile-mode .main {
-  display: flex; flex-direction: column; 
-  padding: 0; gap: 0;
-}
-
-body.mobile-mode .workspace { gap: 0; }
-body.mobile-mode .video-stage { border-radius: 0; background: #000; }
-
-body.mobile-mode .tile { border-radius: 0; border: none; box-shadow: none; }
-body.mobile-mode .tile.minimized {
-  width: 120px; height: 160px; /* Portrait mini tile for mobile */
-  bottom: 90px; right: 16px; /* Above the footer deck */
-  border-radius: 12px;
-  border: 2px solid rgba(255,255,255,0.2);
-}
-body.mobile-mode .user-tag, body.mobile-mode .top-pill { display: none !important; }
-
-body.mobile-mode .footer-deck-wrapper {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  height: 80px; flex: 0 0 80px;
-  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-  z-index: 50;
-}
-body.mobile-mode .footer-deck {
-  background: transparent; border: none; box-shadow: none;
-  gap: 16px;
-}
-body.mobile-mode .ctrl {
-  background: rgba(255,255,255,0.15); border: none; color: #fff;
-  border-radius: 50%; width: 50px; height: 50px; backdrop-filter: blur(10px);
-}
-body.mobile-mode .ctrl.off { background: var(--red) !important; color: #fff !important; }
-body.mobile-mode .ctrl.active-chat { background: var(--meet-green-primary) !important; color: #fff !important; }
-body.mobile-mode .ctrl.hang { background: var(--red) !important; width: 64px; border-radius: 30px; }
-
-/* Mobile Full-Screen Overlay Panel for Chat/Rx */
-body.mobile-mode .sidebar-panel {
-  position: fixed;
-  top: 100vh; /* Hidden offscreen by default */
-  left: 0;
-  width: 100vw;
-  height: calc(100vh - env(safe-area-inset-top)); /* Cover screen below status bar */
-  max-width: none;
-  z-index: 9999;
-  border-radius: 24px 24px 0 0;
-  border: none;
-  box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
-  transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-body.mobile-mode.chat-open .sidebar-panel {
-  top: env(safe-area-inset-top); /* Slide up */
-}
-
-/* Card Landing Fixes for Mobile */
-body.mobile-mode .card { width: 95%; padding: 40px 24px; border-radius: 24px; }
-body.mobile-mode .card h1 { font-size: 24px; }
-body.mobile-mode .card p { font-size: 14px; }
-body.mobile-mode .join-box input, body.mobile-mode .join-box button { height: 54px; font-size: 16px; }
-
-/* Responsive fallback just in case JS detection is slow */
-@media screen and (max-width: 900px) {
-  body:not(.mobile-mode) { padding: 0; }
-  body:not(.mobile-mode) .sidebar-panel { display: none; }
-}
-
 </style>
 </head>
-<body>
+<body class="chat-open">
 
 <header class="header">
   <div class="brand">
@@ -338,7 +337,7 @@ body.mobile-mode .join-box input, body.mobile-mode .join-box button { height: 54
       <section class="footer-deck">
         <button class="ctrl" id="micBtn" aria-label="Mute"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"></rect><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="21" x2="12" y2="23"></line><line x1="9" y1="23" x2="15" y2="23"></line></svg></button>
         <button class="ctrl" id="camBtn" aria-label="Camera"><svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="3" ry="3"></rect></svg></button>
-        <button class="ctrl" id="chatBtn" aria-label="Sidebar"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="8" y1="8" x2="16" y2="8" stroke-width="1.8" opacity="0.7"></line><line x1="8" y1="12" x2="14" y2="12" stroke-width="1.8" opacity="0.7"></line></svg></button>
+        <button class="ctrl active-chat" id="chatBtn" aria-label="Sidebar"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="8" y1="8" x2="16" y2="8" stroke-width="1.8" opacity="0.7"></line><line x1="8" y1="12" x2="14" y2="12" stroke-width="1.8" opacity="0.7"></line></svg></button>
         <button class="ctrl hang" id="hangBtn" aria-label="Leave"><svg viewBox="0 0 24 24"><path d="M10.68 13.31a16 16 0 0 0 2.64 0 2.5 2.5 0 0 1 1.91.75l1.63 1.63a1 1 0 0 0 1.41 0l2.44-2.44a1 1 0 0 0 0-1.41l-1.63-1.63a2.5 2.5 0 0 1-.75-1.91 16 16 0 0 0-12.68 0 2.5 2.5 0 0 1-.75 1.91l-1.63 1.63a1 1 0 0 0 0 1.41l2.44 2.44a1 1 0 0 0 1.41 0l1.63-1.63a2.5 2.5 0 0 1 1.91-.75z"></path></svg></button>
       </section>
     </div>
@@ -413,10 +412,10 @@ body.mobile-mode .join-box input, body.mobile-mode .join-box button { height: 54
         </div>
         
         <div class="rx-action-deck">
-          <button type="button" class="btn-secondary" id="sendChatRxBtn">
+          <button class="btn-secondary" id="sendChatRxBtn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg> Send to Chat
           </button>
-          <button type="button" class="btn-primary" id="directPrintRxBtn">
+          <button class="btn-primary" id="directPrintRxBtn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Print Doc
           </button>
         </div>
@@ -460,361 +459,806 @@ body.mobile-mode .join-box input, body.mobile-mode .join-box button { height: 54
   </div>
 </div>
 
+<div class="custom-modal-overlay" id="customConfirmModal">
+  <div class="custom-modal-card">
+    <p id="customConfirmText"></p>
+    <div class="custom-modal-actions">
+      <button class="btn-secondary" id="customConfirmCancelBtn" style="padding: 12px 24px; height: auto; margin: 0;">Cancel</button>
+      <button class="btn-primary" id="customConfirmOkBtn" style="padding: 12px 24px; height: auto; margin: 0;">Send</button>
+    </div>
+  </div>
+</div>
+
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+// WebRTC & Environment-Adaptive UI Logic
+const videoGrid = document.getElementById('videoGrid');
+const micBtn = document.getElementById('micBtn');
+const camBtn = document.getElementById('camBtn');
+const chatBtn = document.getElementById('chatBtn');
+const closeChatBtn = document.getElementById('closeChatBtn');
+const hangBtn = document.getElementById('hangBtn');
+const overlay = document.getElementById('overlay');
+const joinBtn = document.getElementById('joinBtn');
+const nameInput = document.getElementById('nameInput');
+const statusText = document.getElementById('statusText');
+
+let stream = null; let micOn = true; let camOn = true;
+
+// Custom Application Dialog Engine Handlers (Replaces Native Window Alerts/Confirms for WebViews)
+let currentConfirmAction = null;
+
+function showCustomAlert(message) {
+  document.getElementById('customAlertText').textContent = message;
+  document.getElementById('customAlertModal').classList.add('show');
+}
+
+document.getElementById('customAlertCloseBtn').addEventListener('click', () => {
+  document.getElementById('customAlertModal').classList.remove('show');
+  nameInput.focus();
+});
+
+function showCustomConfirm(message, confirmedCallback) {
+  document.getElementById('customConfirmText').textContent = message;
+  currentConfirmAction = confirmedCallback;
+  document.getElementById('customConfirmModal').classList.add('show');
+}
+
+document.getElementById('customConfirmCancelBtn').addEventListener('click', () => {
+  document.getElementById('customConfirmModal').classList.remove('show');
+  currentConfirmAction = null;
+});
+
+document.getElementById('customConfirmOkBtn').addEventListener('click', () => {
+  document.getElementById('customConfirmModal').classList.remove('show');
+  if (currentConfirmAction) currentConfirmAction();
+  currentConfirmAction = null;
+});
+
+function createParticipantTile(name, type = 'remote', streamObject = null) {
+  const tile = document.createElement('div');
+  tile.className = 'tile';
+  const initials = name.charAt(0).toUpperCase();
+
+  tile.innerHTML = `
+    <video ${type === 'local' ? 'muted' : ''} autoplay playsinline></video>
+    <div class='placeholder'>
+      ${type === 'local' ? `
+      <div class='live-pulse-container'>
+        <div class='pulse-ring'></div>
+        <div class='medical'>☤</div>
+      </div>
+      <h2>Live Clinical Feed</h2>
+      <p>Camera active inside secure sandbox container.</p>
+      ` : `
+      <div class="loading-spinner"></div>
+      <h2>Connecting...</h2>
+      <p>Awaiting incoming secure media handshakes.</p>
+      `}
+    </div>
+    <div class='user-tag'><div class='avatar'>${initials}</div><div class='info'><strong>${name}</strong><span>${type === 'local' ? 'Host' : (streamObject ? 'Connected' : 'Connecting...')}</span></div></div>
+  `;
+
+  const video = tile.querySelector('video');
+  const placeholder = tile.querySelector('.placeholder');
+  if (type === 'local') video.style.transform = 'scaleX(-1)';
+
+  if (streamObject) {
+    video.srcObject = streamObject;
+    video.onloadedmetadata = () => { 
+      video.play(); 
+      placeholder.style.display = 'none'; 
+      if (type === 'remote') tile.querySelector('.info span').textContent = 'Connected';
+    };
+  } else {
+    placeholder.style.display = 'flex';
+  }
+  return { tile, video, placeholder };
+}
+
+async function joinWorkspace() {
+  const name = nameInput.value.trim();
+  
+  // Custom Alert Modal Trigger replacing default popup engine
+  if (!name) {
+    showCustomAlert("Please enter your workspace display name before joining.");
+    return;
+  }
+
+  joinBtn.disabled = true; joinBtn.textContent = 'Allocating Ports...';
+  videoGrid.innerHTML = '';
+
+  // Fail-Safe Hardware Fallback Wrapper for WebViews/APKs
+  try { 
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: true }); 
+    } else {
+      throw new Error('Sandbox strict restriction');
+    }
+  } catch (e) { 
+    console.warn('Hardware block encountered. Launching clean graphical environment simulator layers.'); 
+  }
+
+  document.body.classList.add('joined');
+  statusText.textContent = name + " (Live)";
+  overlay.classList.add('hide');
+
+  const localObj = createParticipantTile(name, 'local', stream);
+  const remoteObj = createParticipantTile('Consulting Peer', 'remote', null);
+
+  remoteObj.tile.classList.add('maximized');
+  localObj.tile.classList.add('minimized');
+
+  [localObj.tile, remoteObj.tile].forEach(tile => {
+    tile.addEventListener('click', function() {
+      if (this.classList.contains('minimized')) {
+        const currentMax = videoGrid.querySelector('.maximized');
+        if (currentMax) { currentMax.classList.remove('maximized'); currentMax.classList.add('minimized'); }
+        this.classList.remove('minimized'); this.classList.add('maximized');
+      }
+    });
+  });
+  
+  videoGrid.appendChild(remoteObj.tile); 
+  videoGrid.appendChild(localObj.tile);
+}
+
+joinBtn.addEventListener('click', joinWorkspace);
+nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); joinWorkspace(); } });
+
+micBtn.addEventListener('click', () => { if(!stream) return; micOn = !micOn; stream.getAudioTracks().forEach(t => t.enabled = micOn); micBtn.classList.toggle('off', !micOn); });
+camBtn.addEventListener('click', () => { if(!stream) return; camOn = !camOn; stream.getVideoTracks().forEach(t => t.enabled = camOn); camBtn.classList.toggle('off', !camOn); });
+
+function toggleChatPanel() {
+  document.body.classList.toggle('chat-collapsed');
+  chatBtn.classList.toggle('active-chat', !document.body.classList.contains('chat-collapsed'));
+}
+chatBtn.addEventListener('click', toggleChatPanel);
+closeChatBtn.addEventListener('click', toggleChatPanel);
+
+// Sidebar Tabs & Navigation Logic
+const tabChatBtn = document.getElementById('tabChatBtn');
+const tabRxBtn = document.getElementById('tabRxBtn');
+const viewChat = document.getElementById('viewChat');
+const viewRx = document.getElementById('viewRx');
+
+function openChatTab() {
+  tabChatBtn.classList.add('active'); tabRxBtn.classList.remove('active');
+  viewChat.classList.add('active'); viewRx.classList.remove('active');
+}
+function openRxTab() {
+  tabRxBtn.classList.add('active'); tabChatBtn.classList.remove('active');
+  viewRx.classList.add('active'); viewChat.classList.remove('active');
+}
+
+tabChatBtn.addEventListener('click', openChatTab);
+tabRxBtn.addEventListener('click', openRxTab);
+
+hangBtn.addEventListener('click', () => {
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  overlay.classList.remove('hide'); document.body.classList.remove('joined');
+  statusText.textContent = 'Disconnected'; videoGrid.innerHTML = '';
+  joinBtn.disabled = false; joinBtn.textContent = 'Join Workspace';
+});
+
+// ==========================================
+// REFACTORED PRESCRIPTION LOGIC (Multi-Med)
+// ==========================================
+
+function getRxData() {
+  const medGroups = document.querySelectorAll('.med-group');
+  const medsList = [];
+  
+  medGroups.forEach(group => {
+    const nameVal = group.querySelector('.rx-med-name').value.trim();
+    if (nameVal) {
+      medsList.push({
+        name: nameVal,
+        dosage: group.querySelector('.rx-med-dosage').value.trim(),
+        freq: group.querySelector('.rx-med-freq').value.trim()
+      });
+    }
+  });
+
+  // Fallback default state tracking if confirmed empty
+  if (medsList.length === 0) {
+    medsList.push({ name: '_______________________', dosage: '', freq: 'As directed' });
+  }
+
+  return {
+    patient: document.getElementById('rxPatient').value.trim() || '_______________________',
+    meds: medsList,
+    notes: document.getElementById('rxNotes').value.trim() || '',
+    dateStr: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  };
+}
+
+// Emptiness Evaluation Script layer
+function checkPrescriptionIsEmpty() {
+  const patient = document.getElementById('rxPatient').value.trim();
+  const notes = document.getElementById('rxNotes').value.trim();
+  let hasAnyMedicationData = false;
+
+  document.querySelectorAll('.med-group').forEach(group => {
+    if (
+      group.querySelector('.rx-med-name').value.trim() ||
+      group.querySelector('.rx-med-dosage').value.trim() ||
+      group.querySelector('.rx-med-freq').value.trim()
+    ) {
+      hasAnyMedicationData = true;
+    }
+  });
+
+  return (!patient && !notes && !hasAnyMedicationData);
+}
+
+// Add row interaction handler script
+document.getElementById('addMedBtn').addEventListener('click', () => {
+  const container = document.getElementById('rxMedsContainer');
+  const nextIndex = container.querySelectorAll('.med-group').length + 1;
+  
+  const newGroup = document.createElement('div');
+  newGroup.className = 'med-group';
+  newGroup.innerHTML = `
+    <div class="med-row-header">
+      <label style="font-size: 11px; font-weight: 700; color: var(--meet-green-dark); text-transform: uppercase; letter-spacing: 0.5px;">Medication #${nextIndex}</label>
+      <button type="button" class="remove-med-btn">✕ Remove</button>
+    </div>
+    <div class="rx-field">
+      <label>Medication Name</label>
+      <input type="text" class="rx-input rx-med-name" placeholder="e.g. Amoxicillin">
+    </div>
+    <div class="rx-field">
+      <label>Dosage strength</label>
+      <input type="text" class="rx-input rx-med-dosage" placeholder="e.g. 500mg">
+    </div>
+    <div class="rx-field">
+      <label>Frequency & Duration</label>
+      <input type="text" class="rx-input rx-med-freq" placeholder="e.g. 1 Tablet twice daily for 5 days">
+    </div>
+  `;
+  
+  newGroup.querySelector('.remove-med-btn').addEventListener('click', () => {
+    newGroup.remove();
+    // Re-index remaining rows cleanly
+    container.querySelectorAll('.med-group').forEach((g, idx) => {
+      g.querySelector('.med-row-header label').textContent = `Medication #${idx + 1}`;
+    });
+  });
+  
+  container.appendChild(newGroup);
+});
+
+window.executePrintRx = function(dataStr) {
+  const data = typeof dataStr === 'string' ? JSON.parse(decodeURIComponent(dataStr)) : dataStr;
+  
+  let dynamicMedsHTML = '';
+  data.meds.forEach((m, idx) => {
+    dynamicMedsHTML += `
+      <div class="medication-block" style="padding-left: 20px; border-left: 3px solid #e2e8f0; margin-bottom: 30px;">
+        <h2 style="font-size: 22px; font-weight: 700; margin: 0 0 8px 0; display: flex; align-items: baseline; gap: 10px;">
+          <span style="color: #64748b; font-size: 16px;">${idx + 1}.</span> ${m.name} ${m.dosage ? `<span class="dose" style="font-size: 18px; font-weight: 500; color: #475569;">— ${m.dosage}</span>` : ''}
+        </h2>
+        <p class="sig" style="font-size: 16px; margin: 0; color: #334155; line-height: 1.6;">
+          <strong style="color: #0f172a; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; margin-right: 5px;">Sig:</strong> ${m.freq}
+        </p>
+      </div>
+    `;
+  });
+  
+  const rxHTML = `
+    <html>
+      <head>
+        <title>Prescription - ${data.patient}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap');
+          @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+          
+          body { 
+            font-family: 'Inter', sans-serif; padding: 0; margin: 0; color: #0f172a; 
+            display: flex; justify-content: center; background: white;
+          }
+          
+          .rx-container {
+            width: 100%; max-width: 800px; padding: 50px; position: relative;
+            background: #ffffff; min-height: 100vh; box-sizing: border-box;
+          }
+          
+          .watermark {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 400px; font-family: 'Libre Baskerville', serif; color: rgba(19, 115, 51, 0.04);
+            z-index: 0; pointer-events: none; margin: 0; padding: 0; line-height: 1;
+          }
+          
+          .content { position: relative; z-index: 10; }
+          
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 4px solid #137333; padding-bottom: 25px; margin-bottom: 35px; }
+          .clinic-logo { display: flex; align-items: center; gap: 12px; }
+          .logo-mark { font-size: 38px; color: #137333; line-height: 1; }
+          .clinic-info h1 { font-family: 'Libre Baskerville', serif; margin: 0 0 4px 0; color: #137333; font-size: 26px; font-weight: 700; }
+          .clinic-info p { margin: 0; color: #64748b; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+          
+          .doc-meta { text-align: right; }
+          .doc-meta p { margin: 0 0 6px 0; font-size: 14px; color: #475569; }
+          .doc-meta strong { color: #0f172a; }
+          
+          .patient-block {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 20px 25px; display: flex; justify-content: space-between; margin-bottom: 40px;
+          }
+          .patient-block div h3 { font-size: 12px; text-transform: uppercase; color: #64748b; margin: 0 0 8px 0; letter-spacing: 0.5px; }
+          .patient-block div p { font-size: 18px; font-weight: 600; margin: 0; color: #0f172a; }
+          
+          .rx-symbol { font-family: 'Libre Baskerville', serif; font-size: 72px; color: #137333; line-height: 1; margin: 0 0 20px 0; }
+          .notes { background: #fffbeb; padding: 16px 20px; border-radius: 8px; border-left: 4px solid #f59e0b; color: #78350f; font-size: 14px; line-height: 1.5; margin-top: 20px;}
+          
+          .footer { margin-top: 80px; display: flex; justify-content: space-between; align-items: flex-end; }
+          .security-notice { font-size: 11px; color: #94a3b8; max-width: 350px; line-height: 1.5; }
+          .signature-box { width: 280px; text-align: center; }
+          .sig-line { border-bottom: 1px solid #0f172a; height: 40px; margin-bottom: 8px; }
+          .signature-box p { margin: 0; font-size: 13px; color: #0f172a; font-weight: 600; text-transform: uppercase; }
+          .signature-box span { font-size: 11px; color: #64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="rx-container">
+          <div class="watermark">℞</div>
+          <div class="content">
+            <div class="header">
+              <div class="clinic-logo">
+                <div class="logo-mark">☤</div>
+                <div class="clinic-info">
+                  <h1>Telehealth Clinical Network</h1>
+                  <p>Verified Digital E-Prescription</p>
+                </div>
+              </div>
+              <div class="doc-meta">
+                <p><strong>Date:</strong> ${data.dateStr}</p>
+                <p><strong>Ref:</strong> ${Math.random().toString(36).substring(2, 10).toUpperCase()}</p>
+              </div>
+            </div>
+            
+            <div class="patient-block">
+              <div>
+                <h3>Patient Name</h3>
+                <p>${data.patient}</p>
+              </div>
+            </div>
+
+            <div class="rx-symbol">℞</div>
+            
+            <div class="medications-wrapper">
+              ${dynamicMedsHTML}
+            </div>
+
+            ${data.notes ? `<div class="notes"><strong>Clinical Notes:</strong><br>${data.notes}</div>` : ''}
+
+            <div class="footer">
+              <div class="security-notice">
+                CONFIDENTIALITY NOTICE:<br>
+                This document was generated securely via Telemedicine Portal. It contains confidential health information legally privileged and intended only for the use of the individual named above.
+              </div>
+              <div class="signature-box">
+                <div class="sig-line"></div>
+                <p>Authorized Signature</p>
+                <span>Electronically Signed</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const printFrame = document.createElement('iframe');
+  printFrame.style.position = 'absolute'; printFrame.style.width = '0px'; printFrame.style.height = '0px'; printFrame.style.border = 'none';
+  document.body.appendChild(printFrame);
+  
+  const pDoc = printFrame.contentWindow.document;
+  pDoc.open(); pDoc.write(rxHTML); pDoc.close();
+
+  // Wrapped in safety try-catch block for WebView Print Support
+  try {
+    setTimeout(() => {
+      printFrame.contentWindow.focus();
+      printFrame.contentWindow.print();
+      setTimeout(() => { document.body.removeChild(printFrame); }, 500);
+    }, 300);
+  } catch (err) {
+    console.error("Print API prevented by mobile WebView wrapper.");
+    showCustomAlert("The document was generated securely, however, native printing capabilities are blocked inside this application wrapper.");
+  }
+};
+
+// Button 1: Direct Print Document with non-blocking app-native confirmation modal layer
+document.getElementById('directPrintRxBtn').addEventListener('click', () => {
+  if (checkPrescriptionIsEmpty()) {
+    showCustomConfirm("You are sending an empty prescription. Do you want to send?", () => {
+      window.executePrintRx(getRxData());
+    });
+  } else {
+    window.executePrintRx(getRxData());
+  }
+});
+
+// Button 2: Send directly to Pipeline Chat Layout with non-blocking app-native confirmation modal layer
+document.getElementById('sendChatRxBtn').addEventListener('click', () => {
+  const proceedWithSend = () => {
+    const data = getRxData();
+    const encodedData = encodeURIComponent(JSON.stringify(data));
     
-    // --- 1. MOBILE DETECTION ENGINE ---
-    const checkMobile = () => {
-        if (window.innerWidth <= 900 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-            document.body.classList.add('mobile-mode');
-            // Force chat closed on load for mobile so video is visible
-            document.body.classList.remove('chat-open');
-            document.body.classList.add('chat-collapsed');
+    let chatMedsList = '';
+    data.meds.forEach((m, idx) => {
+      chatMedsList += `
+        <div style="margin-bottom: 10px; border-left: 2px solid var(--meet-green-primary); padding-left: 8px;">
+          <strong style="color:var(--text); font-size:13px;">${idx + 1}. ${m.name}</strong> ${m.dosage ? `<span style="color:var(--muted); font-size:12px;">(${m.dosage})</span>` : ''}<br>
+          <span style="color: var(--muted); font-size: 12px; display:inline-block; margin-top:2px;">Sig: ${m.freq}</span>
+        </div>
+      `;
+    });
+
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'rx-chat-card';
+    cardDiv.innerHTML = `
+      <div class="rx-chat-header"><span class="icon">℞</span> Official Prescription Generated</div>
+      <div class="rx-chat-body">
+        <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;"><strong>Patient:</strong> ${data.patient}</div>
+        <div>${chatMedsList}</div>
+      </div>
+      <div class="rx-chat-footer">
+        <button class="inline-print-btn" onclick="window.executePrintRx('${encodedData}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          Print Document
+        </button>
+      </div>
+    `;
+    
+    messages.appendChild(cardDiv);
+    
+    // Clean field values
+    document.getElementById('rxPatient').value = '';
+    document.getElementById('rxNotes').value = '';
+    
+    // Re-initialize row array container back to default pristine layout state
+    document.getElementById('rxMedsContainer').innerHTML = `
+      <div class="med-group">
+        <div class="med-row-header">
+          <label style="font-size: 11px; font-weight: 700; color: var(--meet-green-dark); text-transform: uppercase; letter-spacing: 0.5px;">Medication #1</label>
+        </div>
+        <div class="rx-field">
+          <label>Medication Name</label>
+          <input type="text" class="rx-input rx-med-name" placeholder="e.g. Amoxicillin">
+        </div>
+        <div class="rx-field">
+          <label>Dosage strength</label>
+          <input type="text" class="rx-input rx-med-dosage" placeholder="e.g. 500mg">
+        </div>
+        <div class="rx-field">
+          <label>Frequency & Duration</label>
+          <input type="text" class="rx-input rx-med-freq" placeholder="e.g. 1 Tablet twice daily for 5 days">
+        </div>
+      </div>
+    `;
+    
+    openChatTab();
+    messages.scrollTop = messages.scrollHeight;
+  };
+
+  if (checkPrescriptionIsEmpty()) {
+    showCustomConfirm("You are sending an empty prescription. Do you want to send?", proceedWithSend);
+  } else {
+    proceedWithSend();
+  }
+});
+
+
+// Chat & Image Print Logic
+const chatForm = document.getElementById('chatForm');
+const chatInput = document.getElementById('chatInput');
+const messages = document.getElementById('messages');
+const photoInput = document.getElementById('photoInput');
+const triggerFileBtn = document.getElementById('triggerFileBtn');
+const uploadPreviewBar = document.getElementById('uploadPreviewBar');
+const previewThumb = document.getElementById('previewThumb');
+const removePreviewBtn = document.getElementById('removePreviewBtn');
+const lightboxOverlay = document.getElementById('lightboxOverlay');
+const lightboxImg = document.getElementById('lightboxImg');
+const closeLightboxBtn = document.getElementById('closeLightboxBtn');
+const printImageBtn = document.getElementById('printImageBtn');
+let pendingImageBase64 = null;
+
+triggerFileBtn.addEventListener('click', () => photoInput.click());
+photoInput.addEventListener('change', (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => { pendingImageBase64 = event.target.result; previewThumb.src = pendingImageBase64; uploadPreviewBar.style.display = 'flex'; };
+  reader.readAsDataURL(file);
+});
+removePreviewBtn.addEventListener('click', () => { pendingImageBase64 = null; photoInput.value = ''; uploadPreviewBar.style.display = 'none'; });
+
+function execPrintImg(targetSrc) {
+  if (!targetSrc) return;
+  const printFrame = document.createElement('iframe');
+  printFrame.style.position = 'absolute'; printFrame.style.width = '0px'; printFrame.style.height = '0px'; printFrame.style.border = 'none';
+  document.body.appendChild(printFrame);
+  const pDoc = printFrame.contentWindow.document;
+  pDoc.open();
+  pDoc.write(`<html><head><style>@media print{ body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;} img{max-width:100%;max-height:100vh;object-fit:contain;} }</style></head><body><img src="${targetSrc}" onload="window.print(); setTimeout(function(){ window.parent.document.body.removeChild(window.frameElement); }, 400);"></body></html>`);
+  pDoc.close();
+}
+
+chatForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const text = chatInput.value.trim();
+  if (!text && !pendingImageBase64) return;
+  if (text) {
+    const textBubble = document.createElement('div');
+    textBubble.className = 'msg me'; textBubble.textContent = text; messages.appendChild(textBubble);
+  }
+  if (pendingImageBase64) {
+    const imgWrap = document.createElement('div'); imgWrap.className = 'chat-img-wrap';
+    const img = document.createElement('img'); img.src = pendingImageBase64;
+    img.onclick = () => { lightboxImg.src = img.src; lightboxOverlay.style.display = 'flex'; };
+    const inlinePrint = document.createElement('button'); inlinePrint.className = 'inline-print-btn';
+    inlinePrint.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Print';
+    const imgSrcCapture = pendingImageBase64; inlinePrint.onclick = () => execPrintImg(imgSrcCapture);
+    imgWrap.appendChild(img); imgWrap.appendChild(inlinePrint); messages.appendChild(imgWrap);
+  }
+  chatInput.value = ''; pendingImageBase64 = null; photoInput.value = ''; uploadPreviewBar.style.display = 'none'; messages.scrollTop = messages.scrollHeight;
+});
+
+closeLightboxBtn.addEventListener('click', () => { lightboxOverlay.style.display = 'none'; lightboxImg.src = ''; });
+printImageBtn.addEventListener('click', () => execPrintImg(lightboxImg.src));
+</script>
+   <style>
+/* Active Mobile Core Context */
+body.mobile-mode {
+  padding: 0 !important;
+  margin: 0 !important;
+  height: 100dvh !important;
+  width: 100vw !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+body.mobile-mode .header {
+  height: 60px !important;
+  flex: 0 0 60px !important;
+  border-radius: 0 !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 0 12px !important;
+  width: 100vw !important;
+}
+body.mobile-mode .brand h1 { font-size: 16px !important; }
+body.mobile-mode .logo { width: 34px !important; height: 34px !important; font-size: 18px !important; border-radius: 10px !important; }
+body.mobile-mode .connection { padding: 4px 10px !important; font-size: 11px !important; border: none !important; background: transparent !important; }
+
+/* Wipe out desktop grid layout completely */
+body.mobile-mode .main {
+  flex: 1 !important;
+  display: block !important; 
+  position: relative !important;
+  width: 100vw !important;
+  height: calc(100dvh - 60px) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+body.mobile-mode .workspace {
+  width: 100% !important;
+  height: 100% !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+}
+
+body.mobile-mode .video-stage {
+  flex: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+  position: relative !important;
+  background: #090d16 !important;
+}
+
+/* Video Feed Layer Hierarchy */
+body.mobile-mode .tile:not(.minimized) {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+  border: none !important;
+  z-index: 1 !important;
+}
+
+/* High-Z Index Floating Secure Thumb (Picture-in-Picture) */
+body.mobile-mode .tile.minimized {
+  position: absolute !important;
+  top: auto !important;
+  left: auto !important;
+  bottom: 96px !important; /* Anchored cleanly above mobile UI decks */
+  right: 16px !important;
+  width: 115px !important;
+  height: 165px !important;
+  border-radius: 16px !important;
+  z-index: 1000 !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.4) !important;
+  border: 2px solid rgba(255,255,255,0.6) !important;
+  overflow: hidden !important;
+}
+body.mobile-mode .user-tag, body.mobile-mode .top-pill { display: none !important; }
+
+/* Reconstructed Bottom Navigation Bar */
+body.mobile-mode .footer-deck-wrapper {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 84px !important;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%) !important;
+  z-index: 5000 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  pointer-events: none; /* Allows canvas selections behind the bar wrapper */
+}
+
+body.mobile-mode .footer-deck {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  gap: 14px !important;
+  pointer-events: auto; /* Restores button targets explicitly */
+}
+
+body.mobile-mode .ctrl {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border-radius: 50% !important;
+  width: 52px !important;
+  height: 52px !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+body.mobile-mode .ctrl.off { background: var(--red) !important; border-color: var(--red) !important; }
+body.mobile-mode .ctrl.active-chat { background: var(--meet-green-primary) !important; border-color: var(--meet-green-primary) !important; }
+body.mobile-mode .ctrl.hang { width: 68px !important; border-radius: 24px !important; background: var(--red) !important; }
+
+/* Native Sliding Overlay Bottom Sheet System */
+body.mobile-mode .sidebar-panel {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 100dvh !important; /* Stowed below active viewport */
+  height: calc(100dvh - 60px) !important;
+  width: 100vw !important;
+  z-index: 99999 !important;
+  border-radius: 24px 24px 0 0 !important;
+  border: none !important;
+  box-shadow: 0 -12px 40px rgba(0,0,0,0.25) !important;
+  transition: top 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  visibility: hidden;
+}
+
+body.mobile-mode.chat-open .sidebar-panel {
+  top: 60px !important; /* Smooth slide up perfectly below header */
+  visibility: visible !important;
+}
+
+/* Core Internal UI Form Fixes for Webview Keyboards */
+body.mobile-mode .messages, body.mobile-mode .rx-form {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+body.mobile-mode .chat-input-area { padding: 12px 16px !important; background: #ffffff !important; }
+body.mobile-mode .rx-chat-card { width: 95% !important; }
+body.mobile-mode .card { width: 92% !important; padding: 36px 20px !important; border-radius: 28px !important; }
+</style>
+
+<script>
+(function() {
+    // Direct Multi-Touch Tap Handler to completely bypass Webview coordinate conversion delays
+    function forceTouchBind(elementId, eventCallback) {
+        const target = document.getElementById(elementId);
+        if (!target) return;
+        
+        // Remove existing attribute listeners to isolate stack
+        target.onclick = null; 
+        
+        const executeCleanEvent = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            eventCallback();
+        };
+
+        target.addEventListener('touchend', executeCleanEvent, { passive: false });
+        target.addEventListener('click', executeCleanEvent);
+    }
+
+    // Dynamic Environment Switcher Engine
+    function runEnvironmentDetection() {
+        const viewportWidth = window.innerWidth;
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.navigator.userAgent || navigator.userAgent);
+        
+        if (viewportWidth <= 900 || isMobileDevice) {
+            if (!document.body.classList.contains('mobile-mode')) {
+                document.body.classList.add('mobile-mode');
+                // Standard default configuration for mobile views
+                document.body.classList.remove('chat-open');
+                document.body.classList.add('chat-collapsed');
+                const chatBtn = document.getElementById('chatBtn');
+                if (chatBtn) chatBtn.classList.remove('active-chat');
+            }
         } else {
             document.body.classList.remove('mobile-mode');
-            // Web defaults to chat open
-            document.body.classList.add('chat-open');
-            document.body.classList.remove('chat-collapsed');
-        }
-        updateChatBtnUI();
-    };
-    window.addEventListener('resize', checkMobile);
-    checkMobile(); // Run on load
-
-    // --- 2. DOM ELEMENT CACHING ---
-    const videoGrid = document.getElementById('videoGrid');
-    const micBtn = document.getElementById('micBtn');
-    const camBtn = document.getElementById('camBtn');
-    const chatBtn = document.getElementById('chatBtn');
-    const closeChatBtn = document.getElementById('closeChatBtn');
-    const hangBtn = document.getElementById('hangBtn');
-    const overlay = document.getElementById('overlay');
-    const joinBtn = document.getElementById('joinBtn');
-    const nameInput = document.getElementById('nameInput');
-    const statusText = document.getElementById('statusText');
-    const addMedBtn = document.getElementById('addMedBtn');
-
-    let stream = null; 
-    let micOn = true; 
-    let camOn = true;
-
-    // --- 3. CUSTOM MODAL ENGINE ---
-    function showCustomAlert(message) {
-        document.getElementById('customAlertText').textContent = message;
-        document.getElementById('customAlertModal').classList.add('show');
-    }
-    document.getElementById('customAlertCloseBtn').addEventListener('click', () => {
-        document.getElementById('customAlertModal').classList.remove('show');
-    });
-
-    // --- 4. VIDEO & WORKSPACE LOGIC ---
-    function createParticipantTile(name, type = 'remote', streamObject = null, isFallback = false) {
-        const tile = document.createElement('div');
-        tile.className = 'tile';
-        const initials = name.charAt(0).toUpperCase();
-
-        tile.innerHTML = `
-            <video ${type === 'local' ? 'muted' : ''} playsinline autoplay></video>
-            <div class='placeholder'>
-                ${isFallback ? `
-                    <div class="medical" style="background:var(--red);">!</div>
-                    <h2 style="color:var(--red);">Camera Blocked</h2>
-                    <p>App lacks camera permissions.</p>
-                ` : type === 'local' ? `
-                    <div class='live-pulse-container'><div class='pulse-ring'></div><div class='medical'>☤</div></div>
-                    <h2>Live Clinical Feed</h2>
-                ` : `
-                    <div class="loading-spinner"></div>
-                    <h2>Connecting...</h2>
-                `}
-            </div>
-            <div class='user-tag'><div class='avatar'>${initials}</div><div class='info'><strong>${name}</strong><span>${type === 'local' ? 'Host' : 'Connecting...'}</span></div></div>
-        `;
-
-        const video = tile.querySelector('video');
-        const placeholder = tile.querySelector('.placeholder');
-        if (type === 'local') video.style.transform = 'scaleX(-1)';
-
-        if (streamObject) {
-            video.srcObject = streamObject;
-            video.onloadedmetadata = () => { 
-                video.play(); 
-                placeholder.style.display = 'none'; 
-                if (type === 'remote') tile.querySelector('.info span').textContent = 'Connected';
-            };
-        } else {
-            placeholder.style.display = 'flex';
-        }
-        return { tile, video, placeholder };
-    }
-
-    joinBtn.addEventListener('click', async () => {
-        const name = nameInput.value.trim();
-        if (!name) { showCustomAlert("Please enter a display name."); return; }
-
-        joinBtn.disabled = true; joinBtn.textContent = 'Connecting...';
-        videoGrid.innerHTML = '';
-        let isFallback = false;
-
-        try { 
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); 
-            } else {
-                throw new Error('Webview Block');
+            if(!document.body.classList.contains('chat-collapsed')) {
+                document.body.classList.add('chat-open');
             }
-        } catch (e) { 
-            console.warn('Camera blocked by Webview wrapper permissions.'); 
-            isFallback = true;
-        }
-
-        document.body.classList.add('joined');
-        statusText.textContent = name + " (Live)";
-        overlay.classList.add('hide');
-
-        const localObj = createParticipantTile(name, 'local', stream, isFallback);
-        const remoteObj = createParticipantTile('Consulting Peer', 'remote', null, false);
-
-        remoteObj.tile.classList.add('maximized');
-        localObj.tile.classList.add('minimized');
-
-        [localObj.tile, remoteObj.tile].forEach(tile => {
-            tile.addEventListener('click', function() {
-                if (this.classList.contains('minimized')) {
-                    const currentMax = videoGrid.querySelector('.maximized');
-                    if (currentMax) { currentMax.classList.remove('maximized'); currentMax.classList.add('minimized'); }
-                    this.classList.remove('minimized'); this.classList.add('maximized');
-                }
-            });
-        });
-        
-        videoGrid.appendChild(remoteObj.tile); 
-        videoGrid.appendChild(localObj.tile);
-    });
-
-    // --- 5. MEDIA CONTROLS ---
-    micBtn.addEventListener('click', () => { 
-        if(!stream) return; 
-        micOn = !micOn; 
-        stream.getAudioTracks().forEach(t => t.enabled = micOn); 
-        micBtn.classList.toggle('off', !micOn); 
-    });
-    
-    camBtn.addEventListener('click', () => { 
-        if(!stream) return; 
-        camOn = !camOn; 
-        stream.getVideoTracks().forEach(t => t.enabled = camOn); 
-        camBtn.classList.toggle('off', !camOn); 
-    });
-
-    hangBtn.addEventListener('click', () => {
-        if (stream) stream.getTracks().forEach(t => t.stop());
-        overlay.classList.remove('hide'); 
-        document.body.classList.remove('joined');
-        statusText.textContent = 'Disconnected'; 
-        videoGrid.innerHTML = '';
-        joinBtn.disabled = false; joinBtn.textContent = 'Join Workspace';
-    });
-
-    // --- 6. PANEL TOGGLING LOGIC (Mobile & Web) ---
-    function updateChatBtnUI() {
-        if(document.body.classList.contains('chat-open')){
-            chatBtn.classList.add('active-chat');
-        } else {
-            chatBtn.classList.remove('active-chat');
         }
     }
 
-    function toggleChatPanel() {
-        if (document.body.classList.contains('chat-open')) {
+    // Explicit Context Re-Binding Pipeline
+    function runMobileButtonInterceptors() {
+        // Workspace Controller Pipeline
+        forceTouchBind('chatBtn', () => {
+            if (document.body.classList.contains('chat-open')) {
+                document.body.classList.remove('chat-open');
+                document.body.classList.add('chat-collapsed');
+                document.getElementById('chatBtn').classList.remove('active-chat');
+            } else {
+                document.body.classList.add('chat-open');
+                document.body.classList.remove('chat-collapsed');
+                document.getElementById('chatBtn').classList.add('active-chat');
+            }
+        });
+
+        forceTouchBind('closeChatBtn', () => {
             document.body.classList.remove('chat-open');
             document.body.classList.add('chat-collapsed');
-        } else {
-            document.body.classList.add('chat-open');
-            document.body.classList.remove('chat-collapsed');
-        }
-        updateChatBtnUI();
+            const cBtn = document.getElementById('chatBtn');
+            if (cBtn) cBtn.classList.remove('active-chat');
+        });
+
+        // Tab Selector Pipeline
+        forceTouchBind('tabChatBtn', () => {
+            document.getElementById('tabChatBtn').classList.add('active');
+            document.getElementById('tabRxBtn').classList.remove('active');
+            document.getElementById('viewChat').classList.add('active');
+            document.getElementById('viewRx').classList.remove('active');
+        });
+
+        forceTouchBind('tabRxBtn', () => {
+            document.getElementById('tabRxBtn').classList.add('active');
+            document.getElementById('tabChatBtn').classList.remove('active');
+            document.getElementById('viewRx').classList.add('active');
+            document.getElementById('viewChat').classList.remove('active');
+        });
     }
 
-    chatBtn.addEventListener('click', toggleChatPanel);
-    closeChatBtn.addEventListener('click', toggleChatPanel);
-
-    // --- 7. TABS LOGIC ---
-    const tabChatBtn = document.getElementById('tabChatBtn');
-    const tabRxBtn = document.getElementById('tabRxBtn');
-    const viewChat = document.getElementById('viewChat');
-    const viewRx = document.getElementById('viewRx');
-
-    tabChatBtn.addEventListener('click', () => {
-        tabChatBtn.classList.add('active'); tabRxBtn.classList.remove('active');
-        viewChat.classList.add('active'); viewRx.classList.remove('active');
-    });
-    tabRxBtn.addEventListener('click', () => {
-        tabRxBtn.classList.add('active'); tabChatBtn.classList.remove('active');
-        viewRx.classList.add('active'); viewChat.classList.remove('active');
-    });
-
-    // --- 8. Rx MEDICATION ENGINE ---
-    addMedBtn.addEventListener('click', () => {
-        const container = document.getElementById('rxMedsContainer');
-        const nextIndex = container.querySelectorAll('.med-group').length + 1;
-        
-        const newGroup = document.createElement('div');
-        newGroup.className = 'med-group';
-        newGroup.innerHTML = `
-            <div class="med-row-header">
-                <label style="font-size: 11px; font-weight: 700; color: var(--meet-green-dark); text-transform: uppercase; letter-spacing: 0.5px;">Medication #${nextIndex}</label>
-                <button type="button" class="remove-med-btn">✕ Remove</button>
-            </div>
-            <div class="rx-field"><label>Medication Name</label><input type="text" class="rx-input rx-med-name" placeholder="e.g. Amoxicillin"></div>
-            <div class="rx-field"><label>Dosage strength</label><input type="text" class="rx-input rx-med-dosage" placeholder="e.g. 500mg"></div>
-            <div class="rx-field"><label>Frequency & Duration</label><input type="text" class="rx-input rx-med-freq" placeholder="e.g. 1 Tablet twice daily for 5 days"></div>
-        `;
-        
-        newGroup.querySelector('.remove-med-btn').addEventListener('click', () => {
-            newGroup.remove();
-            container.querySelectorAll('.med-group').forEach((g, idx) => {
-                g.querySelector('.med-row-header label').textContent = `Medication #${idx + 1}`;
-            });
-        });
-        
-        container.appendChild(newGroup);
-    });
-
-    function getRxData() {
-        const medsList = [];
-        document.querySelectorAll('.med-group').forEach(group => {
-            const nameVal = group.querySelector('.rx-med-name').value.trim();
-            if (nameVal) {
-                medsList.push({
-                    name: nameVal,
-                    dosage: group.querySelector('.rx-med-dosage').value.trim(),
-                    freq: group.querySelector('.rx-med-freq').value.trim()
-                });
-            }
-        });
-        if (medsList.length === 0) medsList.push({ name: '_______________________', dosage: '', freq: 'As directed' });
-
-        return {
-            patient: document.getElementById('rxPatient').value.trim() || '_______________________',
-            meds: medsList,
-            notes: document.getElementById('rxNotes').value.trim() || '',
-            dateStr: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-        };
-    }
-
-    function isRxEmpty() {
-        const p = document.getElementById('rxPatient').value.trim();
-        const n = document.getElementById('rxNotes').value.trim();
-        let hasMed = false;
-        document.querySelectorAll('.rx-med-name').forEach(el => { if(el.value.trim()) hasMed = true; });
-        return (!p && !n && !hasMed);
-    }
-
-    // --- 9. PRINT ENGINE ---
-    window.executePrintRx = function(dataStr) {
-        const data = typeof dataStr === 'string' ? JSON.parse(decodeURIComponent(dataStr)) : dataStr;
-        let dynamicMedsHTML = '';
-        data.meds.forEach((m, idx) => {
-            dynamicMedsHTML += `<div style="padding-left: 20px; border-left: 3px solid #e2e8f0; margin-bottom: 30px;">
-                <h2 style="font-size: 22px; margin: 0 0 8px 0;">${idx + 1}. ${m.name} ${m.dosage ? `<span style="font-size:18px; color:#475569;">— ${m.dosage}</span>` : ''}</h2>
-                <p style="font-size: 16px; margin: 0;"><strong>Sig:</strong> ${m.freq}</p></div>`;
-        });
-        
-        const html = `<html><head><title>Rx</title><style>body{font-family:sans-serif; padding:40px;}</style></head><body>
-            <h1 style="color:#137333;">Clinical Prescription</h1><p>Date: ${data.dateStr}</p>
-            <div style="background:#f8fafc; padding:20px; margin:20px 0;"><strong>Patient:</strong> ${data.patient}</div>
-            ${dynamicMedsHTML}
-            ${data.notes ? `<div><strong>Notes:</strong><p>${data.notes}</p></div>` : ''}
-            <script>window.onload=function(){window.print();window.close();};<\/script></body></html>`;
-        const win = window.open('', '_blank');
-        win.document.write(html); win.document.close();
-    };
-
-    document.getElementById('directPrintRxBtn').addEventListener('click', () => {
-        if(isRxEmpty()) { showCustomAlert("Prescription is empty."); return; }
-        executePrintRx(getRxData());
-    });
-
-    document.getElementById('sendChatRxBtn').addEventListener('click', () => {
-        if(isRxEmpty()) { showCustomAlert("Prescription is empty."); return; }
-        const rxData = getRxData();
-        const card = document.createElement('div');
-        card.className = 'rx-chat-card';
-        let medsRows = '';
-        rxData.meds.forEach(m => medsRows += `<p>• <strong>${m.name}</strong> ${m.dosage}</p>`);
-        card.innerHTML = `
-            <div class="rx-chat-header"><span class="icon">℞</span> Medical Prescription</div>
-            <div class="rx-chat-body"><p><strong>Patient:</strong> ${rxData.patient}</p>${medsRows}</div>
-            <div class="rx-chat-footer"><button class="inline-print-btn" onclick="executePrintRx('${encodeURIComponent(JSON.stringify(rxData))}')">Print</button></div>
-        `;
-        document.getElementById('messages').appendChild(card);
-        document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
-        tabChatBtn.click(); // Auto switch back to chat tab
-    });
-
-    // --- 10. CHAT INPUT ENGINE ---
-    const photoInput = document.getElementById('photoInput');
-    const uploadPreviewBar = document.getElementById('uploadPreviewBar');
-    const previewThumb = document.getElementById('previewThumb');
-    let pendingImgBase64 = null;
-
-    document.getElementById('triggerFileBtn').addEventListener('click', () => photoInput.click());
+    // Ignition Sequence
+    window.addEventListener('resize', runEnvironmentDetection);
+    runEnvironmentDetection();
+    runMobileButtonInterceptors();
     
-    photoInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                pendingImgBase64 = evt.target.result;
-                previewThumb.src = pendingImgBase64;
-                uploadPreviewBar.style.display = 'flex';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    document.getElementById('removePreviewBtn').addEventListener('click', () => {
-        pendingImgBase64 = null; photoInput.value = ''; uploadPreviewBar.style.display = 'none';
-    });
-
-    document.getElementById('chatForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const input = document.getElementById('chatInput');
-        const text = input.value.trim();
-        if (!text && !pendingImgBase64) return;
-
-        const msgs = document.getElementById('messages');
-        if (pendingImgBase64) {
-            const wrap = document.createElement('div');
-            wrap.className = 'chat-img-wrap';
-            wrap.innerHTML = `<img src="${pendingImgBase64}" onclick="openLightbox('${pendingImgBase64}')">`;
-            msgs.appendChild(wrap);
-        }
-        if (text) {
-            const div = document.createElement('div');
-            div.className = 'msg me'; div.textContent = text;
-            msgs.appendChild(div);
-        }
-        
-        input.value = ''; pendingImgBase64 = null; uploadPreviewBar.style.display = 'none'; photoInput.value = '';
-        msgs.scrollTop = msgs.scrollHeight;
-    });
-
-    // --- 11. LIGHTBOX ---
-    window.openLightbox = function(src) {
-        document.getElementById('lightboxImg').src = src; 
-        document.getElementById('lightboxOverlay').style.display = 'flex';
-    };
-    document.getElementById('closeLightboxBtn').addEventListener('click', () => {
-        document.getElementById('lightboxOverlay').style.display = 'none';
-    });
-    document.getElementById('printImageBtn').addEventListener('click', () => {
-        const win = window.open('', '_blank');
-        win.document.write(`<html><body><img src="${document.getElementById('lightboxImg').src}" style="max-width:100%;" onload="window.print();window.close();"></body></html>`);
-        win.document.close();
-    });
-
-});
+    // Fallback hook to verify layout alignment when entering a live space
+    const joinBtnElement = document.getElementById('joinBtn');
+    if(joinBtnElement) {
+        joinBtnElement.addEventListener('click', () => {
+            setTimeout(() => {
+                runEnvironmentDetection();
+                runMobileButtonInterceptors();
+            }, 150);
+        });
+    }
+})();
 </script>
-</body>
+</body>   
 </html>
