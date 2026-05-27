@@ -3,7 +3,16 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Telehealth Workspace</title>
+
+<link rel="manifest" href="manifest.json">
+
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com https://unpkg.com 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; script-src 'self' 'unsafe-inline' https://unpkg.com; connect-src 'self' wss://*.peerjs.com https://*.peerjs.com;">
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
 <style>
 :root {
   --bg-app: #f1f5f9;       
@@ -25,14 +34,12 @@
 
 html, body {
   width: 100%; 
-  /* Fallback for older browsers */
-  height: 100vh; 
-  /* Dynamic viewport height for mobile keyboards */
+  height: 100%; 
+  height: -webkit-fill-available;
   height: 100dvh; 
   overflow: hidden;
   background: var(--bg-app); font-family: 'Google Sans', Roboto, Arial, sans-serif;
   color: var(--text); display: flex; flex-direction: column; 
-  /* Safe area padding for notches and gesture bars */
   padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); 
   gap: 16px;
 }
@@ -358,7 +365,7 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
       </div>
       <div class="chat-input-area">
         <div class="upload-preview-bar" id="uploadPreviewBar">
-          <img src="" alt="Thumbnail" class="preview-thumbnail" id="previewThumb">
+          <img alt="Thumbnail" class="preview-thumbnail" id="previewThumb">
           <button type="button" class="remove-preview-btn" id="removePreviewBtn">&times;</button>
         </div>
         <form class="input-wrap" id="chatForm">
@@ -436,7 +443,7 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
     <h1>Clinical Workspace</h1>
     <p>Review patient analytics, drop secure files, and host real-time medical group consultations in an isolated sandbox pipeline.</p>
     <div class="join-box">
-      <input id="nameInput" type="text" placeholder="Enter workspace display name">
+      <input id="nameInput" type="text" placeholder="Enter Workspace Room ID">
       <button id="joinBtn">Join Workspace</button>
     </div>
   </div>
@@ -447,7 +454,7 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
     <button class="print-action-btn" id="printImageBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Print Image</button>
     <button class="close-lightbox-btn" id="closeLightboxBtn">Close</button>
   </div>
-  <img src="" alt="Expanded View" class="lightbox-content" id="lightboxImg">
+  <img alt="Expanded View" class="lightbox-content" id="lightboxImg">
 </div>
 
 <div class="custom-modal-overlay" id="customAlertModal">
@@ -483,8 +490,9 @@ const nameInput = document.getElementById('nameInput');
 const statusText = document.getElementById('statusText');
 
 let stream = null; let micOn = true; let camOn = true;
+let peer = null; let currentCall = null;
 
-// Custom Application Dialog Engine Handlers (Replaces Native Window Alerts/Confirms for WebViews)
+// Custom Application Dialog Engine Handlers
 let currentConfirmAction = null;
 
 function showCustomAlert(message) {
@@ -558,16 +566,14 @@ function createParticipantTile(name, type = 'remote', streamObject = null) {
 async function joinWorkspace() {
   const name = nameInput.value.trim();
   
-  // Custom Alert Modal Trigger replacing default popup engine
   if (!name) {
-    showCustomAlert("Please enter your workspace display name before joining.");
+    showCustomAlert("Please enter a Workspace Room ID (e.g., room123) to connect.");
     return;
   }
 
-  joinBtn.disabled = true; joinBtn.textContent = 'Allocating Ports...';
+  joinBtn.disabled = true; joinBtn.textContent = 'Connecting to Network...';
   videoGrid.innerHTML = '';
 
-  // Fail-Safe Hardware Fallback Wrapper for WebViews/APKs
   try { 
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: true }); 
@@ -575,31 +581,44 @@ async function joinWorkspace() {
       throw new Error('Sandbox strict restriction');
     }
   } catch (e) { 
-    console.warn('Hardware block encountered. Launching clean graphical environment simulator layers.'); 
+    showCustomAlert("Camera/Mic access blocked. Please enable permissions.");
+    joinBtn.disabled = false; joinBtn.textContent = 'Join Workspace';
+    return;
   }
 
   document.body.classList.add('joined');
   statusText.textContent = name + " (Live)";
   overlay.classList.add('hide');
 
-  const localObj = createParticipantTile(name, 'local', stream);
-  const remoteObj = createParticipantTile('Consulting Peer', 'remote', null);
-
-  remoteObj.tile.classList.add('maximized');
+  const localObj = createParticipantTile("You", 'local', stream);
   localObj.tile.classList.add('minimized');
+  videoGrid.appendChild(localObj.tile);
 
-  [localObj.tile, remoteObj.tile].forEach(tile => {
-    tile.addEventListener('click', function() {
-      if (this.classList.contains('minimized')) {
-        const currentMax = videoGrid.querySelector('.maximized');
-        if (currentMax) { currentMax.classList.remove('maximized'); currentMax.classList.add('minimized'); }
-        this.classList.remove('minimized'); this.classList.add('maximized');
-      }
+  // Initialize WebRTC PeerJS Connection
+  peer = new Peer(name + '-user-' + Math.floor(Math.random() * 1000));
+
+  peer.on('open', (id) => {
+    console.log('Connected with ID: ' + id);
+    showCustomAlert("Connected! Tell your peer to join room ID: " + name);
+  });
+
+  peer.on('call', (call) => {
+    currentCall = call;
+    call.answer(stream); 
+    
+    const remoteObj = createParticipantTile('Consulting Peer', 'remote', null);
+    remoteObj.tile.classList.add('maximized');
+    videoGrid.appendChild(remoteObj.tile);
+
+    call.on('stream', (remoteStream) => {
+      const video = remoteObj.tile.querySelector('video');
+      const placeholder = remoteObj.tile.querySelector('.placeholder');
+      video.srcObject = remoteStream;
+      video.play();
+      placeholder.style.display = 'none';
+      remoteObj.tile.querySelector('.info span').textContent = 'Connected';
     });
   });
-  
-  videoGrid.appendChild(remoteObj.tile); 
-  videoGrid.appendChild(localObj.tile);
 }
 
 joinBtn.addEventListener('click', joinWorkspace);
@@ -635,15 +654,15 @@ tabRxBtn.addEventListener('click', openRxTab);
 
 hangBtn.addEventListener('click', () => {
   if (stream) stream.getTracks().forEach(t => t.stop());
+  if (currentCall) currentCall.close();
+  if (peer) peer.destroy();
+  
   overlay.classList.remove('hide'); document.body.classList.remove('joined');
   statusText.textContent = 'Disconnected'; videoGrid.innerHTML = '';
   joinBtn.disabled = false; joinBtn.textContent = 'Join Workspace';
 });
 
-// ==========================================
-// REFACTORED PRESCRIPTION LOGIC (Multi-Med)
-// ==========================================
-
+// PRESCRIPTION LOGIC
 function getRxData() {
   const medGroups = document.querySelectorAll('.med-group');
   const medsList = [];
@@ -659,7 +678,6 @@ function getRxData() {
     }
   });
 
-  // Fallback default state tracking if confirmed empty
   if (medsList.length === 0) {
     medsList.push({ name: '_______________________', dosage: '', freq: 'As directed' });
   }
@@ -672,7 +690,6 @@ function getRxData() {
   };
 }
 
-// Emptiness Evaluation Script layer
 function checkPrescriptionIsEmpty() {
   const patient = document.getElementById('rxPatient').value.trim();
   const notes = document.getElementById('rxNotes').value.trim();
@@ -691,7 +708,6 @@ function checkPrescriptionIsEmpty() {
   return (!patient && !notes && !hasAnyMedicationData);
 }
 
-// Add row interaction handler script
 document.getElementById('addMedBtn').addEventListener('click', () => {
   const container = document.getElementById('rxMedsContainer');
   const nextIndex = container.querySelectorAll('.med-group').length + 1;
@@ -719,7 +735,6 @@ document.getElementById('addMedBtn').addEventListener('click', () => {
   
   newGroup.querySelector('.remove-med-btn').addEventListener('click', () => {
     newGroup.remove();
-    // Re-index remaining rows cleanly
     container.querySelectorAll('.med-group').forEach((g, idx) => {
       g.querySelector('.med-row-header label').textContent = `Medication #${idx + 1}`;
     });
@@ -753,44 +768,23 @@ window.executePrintRx = function(dataStr) {
           @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap');
           @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
           
-          body { 
-            font-family: 'Inter', sans-serif; padding: 0; margin: 0; color: #0f172a; 
-            display: flex; justify-content: center; background: white;
-          }
-          
-          .rx-container {
-            width: 100%; max-width: 800px; padding: 50px; position: relative;
-            background: #ffffff; min-height: 100vh; box-sizing: border-box;
-          }
-          
-          .watermark {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 400px; font-family: 'Libre Baskerville', serif; color: rgba(19, 115, 51, 0.04);
-            z-index: 0; pointer-events: none; margin: 0; padding: 0; line-height: 1;
-          }
-          
+          body { font-family: 'Inter', sans-serif; padding: 0; margin: 0; color: #0f172a; display: flex; justify-content: center; background: white; }
+          .rx-container { width: 100%; max-width: 800px; padding: 50px; position: relative; background: #ffffff; min-height: 100vh; box-sizing: border-box; }
+          .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 400px; font-family: 'Libre Baskerville', serif; color: rgba(19, 115, 51, 0.04); z-index: 0; pointer-events: none; margin: 0; padding: 0; line-height: 1; }
           .content { position: relative; z-index: 10; }
-          
           .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 4px solid #137333; padding-bottom: 25px; margin-bottom: 35px; }
           .clinic-logo { display: flex; align-items: center; gap: 12px; }
           .logo-mark { font-size: 38px; color: #137333; line-height: 1; }
           .clinic-info h1 { font-family: 'Libre Baskerville', serif; margin: 0 0 4px 0; color: #137333; font-size: 26px; font-weight: 700; }
           .clinic-info p { margin: 0; color: #64748b; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
-          
           .doc-meta { text-align: right; }
           .doc-meta p { margin: 0 0 6px 0; font-size: 14px; color: #475569; }
           .doc-meta strong { color: #0f172a; }
-          
-          .patient-block {
-            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
-            padding: 20px 25px; display: flex; justify-content: space-between; margin-bottom: 40px;
-          }
+          .patient-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 25px; display: flex; justify-content: space-between; margin-bottom: 40px; }
           .patient-block div h3 { font-size: 12px; text-transform: uppercase; color: #64748b; margin: 0 0 8px 0; letter-spacing: 0.5px; }
           .patient-block div p { font-size: 18px; font-weight: 600; margin: 0; color: #0f172a; }
-          
           .rx-symbol { font-family: 'Libre Baskerville', serif; font-size: 72px; color: #137333; line-height: 1; margin: 0 0 20px 0; }
           .notes { background: #fffbeb; padding: 16px 20px; border-radius: 8px; border-left: 4px solid #f59e0b; color: #78350f; font-size: 14px; line-height: 1.5; margin-top: 20px;}
-          
           .footer { margin-top: 80px; display: flex; justify-content: space-between; align-items: flex-end; }
           .security-notice { font-size: 11px; color: #94a3b8; max-width: 350px; line-height: 1.5; }
           .signature-box { width: 280px; text-align: center; }
@@ -804,44 +798,16 @@ window.executePrintRx = function(dataStr) {
           <div class="watermark">℞</div>
           <div class="content">
             <div class="header">
-              <div class="clinic-logo">
-                <div class="logo-mark">☤</div>
-                <div class="clinic-info">
-                  <h1>Telehealth Clinical Network</h1>
-                  <p>Verified Digital E-Prescription</p>
-                </div>
-              </div>
-              <div class="doc-meta">
-                <p><strong>Date:</strong> ${data.dateStr}</p>
-                <p><strong>Ref:</strong> ${Math.random().toString(36).substring(2, 10).toUpperCase()}</p>
-              </div>
+              <div class="clinic-logo"><div class="logo-mark">☤</div><div class="clinic-info"><h1>Telehealth Clinical Network</h1><p>Verified Digital E-Prescription</p></div></div>
+              <div class="doc-meta"><p><strong>Date:</strong> ${data.dateStr}</p><p><strong>Ref:</strong> ${Math.random().toString(36).substring(2, 10).toUpperCase()}</p></div>
             </div>
-            
-            <div class="patient-block">
-              <div>
-                <h3>Patient Name</h3>
-                <p>${data.patient}</p>
-              </div>
-            </div>
-
+            <div class="patient-block"><div><h3>Patient Name</h3><p>${data.patient}</p></div></div>
             <div class="rx-symbol">℞</div>
-            
-            <div class="medications-wrapper">
-              ${dynamicMedsHTML}
-            </div>
-
+            <div class="medications-wrapper">${dynamicMedsHTML}</div>
             ${data.notes ? `<div class="notes"><strong>Clinical Notes:</strong><br>${data.notes}</div>` : ''}
-
             <div class="footer">
-              <div class="security-notice">
-                CONFIDENTIALITY NOTICE:<br>
-                This document was generated securely via Telemedicine Portal. It contains confidential health information legally privileged and intended only for the use of the individual named above.
-              </div>
-              <div class="signature-box">
-                <div class="sig-line"></div>
-                <p>Authorized Signature</p>
-                <span>Electronically Signed</span>
-              </div>
+              <div class="security-notice">CONFIDENTIALITY NOTICE:<br>This document was generated securely via Telemedicine Portal. It contains confidential health information legally privileged and intended only for the use of the individual named above.</div>
+              <div class="signature-box"><div class="sig-line"></div><p>Authorized Signature</p><span>Electronically Signed</span></div>
             </div>
           </div>
         </div>
@@ -856,7 +822,6 @@ window.executePrintRx = function(dataStr) {
   const pDoc = printFrame.contentWindow.document;
   pDoc.open(); pDoc.write(rxHTML); pDoc.close();
 
-  // Wrapped in safety try-catch block for WebView Print Support
   try {
     setTimeout(() => {
       printFrame.contentWindow.focus();
@@ -869,18 +834,14 @@ window.executePrintRx = function(dataStr) {
   }
 };
 
-// Button 1: Direct Print Document with non-blocking app-native confirmation modal layer
 document.getElementById('directPrintRxBtn').addEventListener('click', () => {
   if (checkPrescriptionIsEmpty()) {
-    showCustomConfirm("You are sending an empty prescription. Do you want to send?", () => {
-      window.executePrintRx(getRxData());
-    });
+    showCustomConfirm("You are sending an empty prescription. Do you want to send?", () => { window.executePrintRx(getRxData()); });
   } else {
     window.executePrintRx(getRxData());
   }
 });
 
-// Button 2: Send directly to Pipeline Chat Layout with non-blocking app-native confirmation modal layer
 document.getElementById('sendChatRxBtn').addEventListener('click', () => {
   const proceedWithSend = () => {
     const data = getRxData();
@@ -906,36 +867,21 @@ document.getElementById('sendChatRxBtn').addEventListener('click', () => {
       </div>
       <div class="rx-chat-footer">
         <button class="inline-print-btn" onclick="window.executePrintRx('${encodedData}')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-          Print Document
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Print Document
         </button>
       </div>
     `;
     
     messages.appendChild(cardDiv);
     
-    // Clean field values
     document.getElementById('rxPatient').value = '';
     document.getElementById('rxNotes').value = '';
-    
-    // Re-initialize row array container back to default pristine layout state
     document.getElementById('rxMedsContainer').innerHTML = `
       <div class="med-group">
-        <div class="med-row-header">
-          <label style="font-size: 11px; font-weight: 700; color: var(--meet-green-dark); text-transform: uppercase; letter-spacing: 0.5px;">Medication #1</label>
-        </div>
-        <div class="rx-field">
-          <label>Medication Name</label>
-          <input type="text" class="rx-input rx-med-name" placeholder="e.g. Amoxicillin">
-        </div>
-        <div class="rx-field">
-          <label>Dosage strength</label>
-          <input type="text" class="rx-input rx-med-dosage" placeholder="e.g. 500mg">
-        </div>
-        <div class="rx-field">
-          <label>Frequency & Duration</label>
-          <input type="text" class="rx-input rx-med-freq" placeholder="e.g. 1 Tablet twice daily for 5 days">
-        </div>
+        <div class="med-row-header"><label style="font-size: 11px; font-weight: 700; color: var(--meet-green-dark); text-transform: uppercase; letter-spacing: 0.5px;">Medication #1</label></div>
+        <div class="rx-field"><label>Medication Name</label><input type="text" class="rx-input rx-med-name" placeholder="e.g. Amoxicillin"></div>
+        <div class="rx-field"><label>Dosage strength</label><input type="text" class="rx-input rx-med-dosage" placeholder="e.g. 500mg"></div>
+        <div class="rx-field"><label>Frequency & Duration</label><input type="text" class="rx-input rx-med-freq" placeholder="e.g. 1 Tablet twice daily for 5 days"></div>
       </div>
     `;
     
@@ -949,7 +895,6 @@ document.getElementById('sendChatRxBtn').addEventListener('click', () => {
     proceedWithSend();
   }
 });
-
 
 // Chat & Image Print Logic
 const chatForm = document.getElementById('chatForm');
@@ -1008,6 +953,15 @@ chatForm.addEventListener('submit', e => {
 
 closeLightboxBtn.addEventListener('click', () => { lightboxOverlay.style.display = 'none'; lightboxImg.src = ''; });
 printImageBtn.addEventListener('click', () => execPrintImg(lightboxImg.src));
+
+// PWA Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Service Worker running safely.', reg.scope))
+      .catch(err => console.error('Service Worker registration failed:', err));
+  });
+}
 </script>
 </body>   
 </html>
