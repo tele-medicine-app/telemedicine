@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>Telemedicine Sync</title>
+<title>Telehealth Workspace</title>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
 :root {
@@ -29,8 +29,11 @@ html, body {
   height: 100vh; 
   height: 100dvh; 
   overflow: hidden;
-  background: var(--bg-app); font-family: 'Google Sans', Roboto, Arial, sans-serif;
-  color: var(--text); display: flex; flex-direction: column; 
+  background: var(--bg-app); 
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  color: var(--text); 
+  display: flex; 
+  flex-direction: column; 
   padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); 
   gap: 16px;
 }
@@ -103,7 +106,7 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
   position: relative; z-index: 2;
 }
 
-/* Visualizer Animations */
+/* Premium Visualizer Animations */
 .live-pulse-container { position: relative; display: flex; align-items: center; justify-content: center; }
 .pulse-ring { position: absolute; width: 84px; height: 84px; border: 2px solid var(--meet-green-primary); border-radius: 26px; animation: visualPulse 2.5s infinite ease-out; opacity: 0; z-index: 1; }
 @keyframes visualPulse {
@@ -111,7 +114,7 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
   100% { transform: scale(1.4); opacity: 0; }
 }
 
-/* Spinner */
+/* Professional Loading Spinner */
 .loading-spinner {
   width: 64px; height: 64px; border: 4px solid var(--border);
   border-top: 4px solid var(--meet-green-primary); border-radius: 50%;
@@ -144,7 +147,7 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 .info strong { font-size: 14px; display: block; color: var(--text); }
 .info span { font-size: 12px; color: var(--muted); display: block; }
 
-/* Control Deck */
+/* Premium Button Deck System */
 .footer-deck-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; height: 84px; flex: 0 0 84px; }
 .footer-deck {
   background: #ffffff; border: 1px solid rgba(226, 232, 240, 0.8); border-radius: 20px;
@@ -163,11 +166,13 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 .ctrl.active-chat { background: #f0fdf4 !important; border-color: #dcfce7 !important; color: #16a34a !important; }
 .ctrl.hang { width: 68px; border-radius: 14px; background: #ef4444 !important; border-color: #ef4444 !important; color: #ffffff !important; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25) !important; }
 
-/* Sidebar Layout */
+/* Chat & Rx Panel Layout */
 .sidebar-panel {
   background: var(--panel); border-radius: 24px; box-shadow: var(--shadow-island);
   border: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; overflow: hidden; 
 }
+body.chat-collapsed .sidebar-panel { display: none !important; }
+
 .sidebar-header {
   padding: 16px 24px; border-bottom: 1px solid var(--border);
   display: flex; justify-content: space-between; align-items: center; background: #fcfdfd;
@@ -184,22 +189,27 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 .view-container { display: none; flex: 1; flex-direction: column; overflow: hidden; }
 .view-container.active { display: flex; }
 
-/* Chat Elements */
+/* Chat specific */
 .messages { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
 .msg { padding: 14px 18px; border-radius: 20px; font-size: 14px; max-width: 85%; line-height: 1.5; word-wrap: break-word; box-shadow: var(--shadow-sm); }
 .system { border: 1px solid var(--border); color: var(--muted); background: var(--bg-app); align-self: center; font-size: 12px; text-align: center; border-radius: 999px; padding: 10px 20px; }
 .me { margin-left: auto; color: #fff; background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); border-bottom-right-radius: 4px; }
-.chat-img-wrap { margin-left: auto; max-width: 85%; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.them { margin-right: auto; color: var(--text); background: #f1f5f9; border-bottom-left-radius: 4px; border: 1px solid var(--border); }
+.chat-img-wrap { max-width: 85%; display: flex; flex-direction: column; gap: 10px; }
+.chat-img-wrap.me { align-items: flex-end; margin-left: auto; }
+.chat-img-wrap.them { align-items: flex-start; margin-right: auto; }
 .chat-img-wrap img { max-width: 100%; border-radius: 16px; border: 1px solid var(--border); cursor: pointer; box-shadow: var(--shadow-sm); }
 .inline-print-btn { background: var(--panel); border: 1px solid var(--border); color: var(--muted); padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
 .inline-print-btn:hover { background: var(--bg-app); color: var(--text); border-color: var(--muted); }
 
 /* Prescription Chat Card */
 .rx-chat-card {
-  margin-left: auto; background: #ffffff; color: var(--text); border: 1px solid var(--meet-green-primary); 
-  border-radius: 16px; border-bottom-right-radius: 4px; padding: 0; box-shadow: 0 4px 12px rgba(52,168,83,0.15);
-  width: 90%; overflow: hidden;
+  background: #ffffff; color: var(--text); border: 1px solid var(--meet-green-primary); 
+  border-radius: 16px; padding: 0; box-shadow: 0 4px 12px rgba(52,168,83,0.15);
+  width: 90%; overflow: hidden; margin-bottom: 8px;
 }
+.rx-chat-card.me { margin-left: auto; border-bottom-right-radius: 4px; }
+.rx-chat-card.them { margin-right: auto; border-bottom-left-radius: 4px; }
 .rx-chat-header {
   background: var(--meet-green-light); padding: 12px 16px; font-weight: 600; color: var(--meet-green-dark);
   display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #cce8d6;
@@ -221,7 +231,7 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 .icon-btn { background: transparent; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; }
 .send { background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); color: #fff; border: none; border-radius: 50%; width: 42px; height: 42px; cursor: pointer; }
 
-/* Prescription (Rx) Panel */
+/* Prescription (Rx) specific */
 .rx-form { padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; background: #fcfdfd; flex: 1; }
 .rx-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .rx-header h3 { font-size: 18px; color: var(--text); font-weight: 600; }
@@ -232,14 +242,14 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 .rx-input:focus { border-color: var(--meet-green-primary); }
 textarea.rx-input { resize: vertical; min-height: 80px; }
 
-/* Multi-Medication UI Additions */
+/* Dynamic Multi-Medication UI Additions */
 .med-group { background: #ffffff; border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 4px; position: relative; }
 .med-row-header { display: flex; justify-content: space-between; align-items: center; }
 .remove-med-btn { background: transparent; border: none; color: var(--red); font-weight: 600; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 2px; }
 .btn-add-med { background: var(--meet-green-light); color: var(--meet-green-dark); border: 1px dashed #cce8d6; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px; margin-bottom: 4px; transition: all 0.2s; }
 .btn-add-med:hover { background: #d0f0db; border-color: var(--meet-green-primary); transform: translateY(-1px); }
 
-/* Rx Actions */
+/* Rx Dual Actions */
 .rx-action-deck { display: flex; gap: 12px; margin-top: 10px; }
 .btn-primary, .btn-secondary {
   flex: 1; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer;
@@ -255,18 +265,40 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
 }
 .btn-secondary:hover { background: var(--meet-green-light); border-color: var(--meet-green-primary); transform: translateY(-2px); }
 
+/* Landing Background */
+.overlay { position: fixed; inset: 0; background: #f4f7fa; overflow: hidden; display: flex; align-items: center; justify-content: center; z-index: 5000; }
+.overlay.hide { display: none; }
+.overlay-bg-decor { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.bg-grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(52, 168, 83, 0.12) 1.5px, transparent 1.5px); background-size: 28px 28px; opacity: 0.85; }
+.bg-aura-blob { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.45; animation: fluidPulse 22s infinite alternate ease-in-out; }
+.blob-primary { width: 550px; height: 550px; background: linear-gradient(135deg, rgba(52,168,83,0.8), rgba(15,157,88,0.6)); top: -12%; left: -8%; }
+.blob-secondary { width: 650px; height: 650px; background: linear-gradient(135deg, rgba(19,115,51,0.7), rgba(66,133,244,0.5)); bottom: -15%; right: -10%; animation-delay: -6s; }
+@keyframes fluidPulse { 0% { transform: translate(0px, 0px) scale(1) rotate(0deg); } 33% { transform: translate(50px, 40px) scale(1.08) rotate(120deg); } 66% { transform: translate(-30px, 60px) scale(0.95) rotate(240deg); } 100% { transform: translate(0px, 0px) scale(1) rotate(360deg); } }
+
+/* Landing Card */
+.card { position: relative; z-index: 5; width: 90%; max-width: 480px; background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(20px); border-radius: 36px; border: 1px solid rgba(255, 255, 255, 0.65); padding: 44px 36px; box-shadow: 0 24px 64px -12 rgba(0,0,0,0.08); text-align: center; }
+.card-logo-container { display: flex; justify-content: center; margin-bottom: 20px; }
+.card-logo { width: 72px; height: 72px; border-radius: 22px; background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 36px; box-shadow: 0 12px 28px rgba(52,168,83,0.3); }
+.card small { color: var(--meet-green-dark); font-weight: 700; letter-spacing: 1px; font-size: 13px; display: block; margin-bottom: 12px; }
+.card h1 { font-size: 26px; font-weight: 600; margin-bottom: 12px; }
+.card p { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+.join-box { display: flex; flex-direction: column; gap: 12px; }
+.join-box input { height: 54px; border-radius: 16px; border: 1px solid var(--border); padding: 0 24px; font-size: 15px; outline: none; background: rgba(241, 245, 249, 0.8); text-align: center; transition: all 0.2s; }
+.join-box input:focus { background: #ffffff; border-color: var(--meet-green-primary); box-shadow: 0 0 0 4px var(--meet-green-light); }
+.join-box button { height: 54px; border-radius: 16px; border: none; background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; }
+
 /* Lightbox */
-.lightbox-overlay { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.98); z-index: 300; display: none; justify-content: center; align-items: center; flex-direction: column; }
+.lightbox-overlay { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.98); z-index: 6000; display: none; justify-content: center; align-items: center; flex-direction: column; }
 .lightbox-content { max-width: 85vw; max-height: 75vh; border-radius: 20px; box-shadow: var(--shadow-island); border: 1px solid var(--border); }
 .lightbox-controls { position: absolute; top: 32px; right: 32px; display: flex; gap: 16px; }
 .print-action-btn, .close-lightbox-btn { padding: 14px 24px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; border: none; }
 .print-action-btn { background: var(--meet-green-primary); color: white; }
 .close-lightbox-btn { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
 
-/* Custom Modals */
+/* Mobile Application Popups Styling */
 .custom-modal-overlay {
   position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(8px); z-index: 400; display: none;
+  backdrop-filter: blur(8px); z-index: 7000; display: none;
   align-items: center; justify-content: center; padding: 20px;
 }
 .custom-modal-overlay.show { display: flex; }
@@ -283,76 +315,55 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
 .custom-modal-card p { font-size: 15px; color: var(--text); line-height: 1.5; margin-bottom: 24px; font-weight: 500; }
 .custom-modal-actions { display: flex; justify-content: center; gap: 12px; }
 
-/* ========================================================== */
-/* CRITICAL MOBILE UI FIXES (PRESERVES PERFECT WEB WORKSPACE) */
-/* ========================================================== */
+/* REFACTORED ADAPTIVE LAYOUT MATRIX FOR MOBILE WEBVIEWS */
 @media(max-width: 900px) {
-  body { padding: 8px; gap: 8px; }
-  .header { padding: 0 14px; height: 56px; border-radius: 16px; }
-  .brand h1 { font-size: 16px; }
-  .logo { width: 34px; height: 34px; font-size: 18px; border-radius: 10px; }
-  .connection { padding: 6px 12px; font-size: 11px; }
+  body { padding: 12px; gap: 12px; }
+  .header { padding: 0 16px; height: 64px; border-radius: 20px; }
   .main { grid-template-columns: 1fr; }
   
-  /* FORCE CHAT PANEL TO OCCUPY EXCLUSIVELY 100% FULL MOBILE VIEWPORT */
-  .sidebar-panel {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: 0;
-    z-index: 200;
-    width: 100vw;
-    height: 100dvh;
-    border-radius: 0;
-    border: none;
-    display: flex !important;
-    margin: 0;
-    padding: 0;
-    transform: translateX(0);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Floating Floating Drawer over Video Stage layout elements */
+  .sidebar-panel { 
+    position: fixed; 
+    right: 12px; 
+    top: 88px; 
+    bottom: 108px; 
+    z-index: 2000; 
+    width: calc(100% - 24px); 
+    max-width: 420px; 
   }
   
-  /* CRITICAL DEFAULT STATE ACTION TIE-IN FOR MOBILE REF */
-  body.chat-collapsed .sidebar-panel {
-    transform: translateX(100%);
+  /* Decoupled layered button interface dock to always prevent screen collision */
+  .footer-deck-wrapper { 
+    position: fixed; 
+    bottom: 12px; 
+    left: 0; 
+    right: 0; 
+    z-index: 3000; 
+    height: 84px; 
+    display: flex; 
+    justify-content: center; 
     pointer-events: none;
   }
+  .footer-deck { pointer-events: auto; }
   
-  /* Clean Mobile Interface UI Component Alignments */
-  .sidebar-header { padding: 12px 16px; }
-  .tab-btn { padding: 8px 16px; font-size: 14px; }
-  .messages { padding: 16px; gap: 12px; }
-  .msg { padding: 12px 14px; font-size: 13px; max-width: 90%; }
-  .chat-input-area { padding: 12px 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
-  .input-wrap { padding: 4px 4px 4px 12px; }
-  .input-wrap input[type="text"] { font-size: 14px; padding: 8px 0; }
-  .icon-btn, .send { width: 38px; height: 38px; }
-  
-  .rx-form { padding: 16px; gap: 12px; }
-  .rx-input { padding: 12px; font-size: 13px; border-radius: 10px; }
-  .med-group { padding: 12px; border-radius: 12px; }
-  .btn-add-med { padding: 12px; font-size: 13px; border-radius: 10px; }
-  .rx-action-deck { gap: 8px; }
-  .btn-primary, .btn-secondary { padding: 12px; font-size: 13px; border-radius: 10px; }
-  
-  .tile.minimized { width: 120px; height: 68px; bottom: 96px; right: 12px; border-radius: 12px; z-index: 10; }
+  /* Elevate Minimized Picture-in-Picture window above footer bar metrics */
+  .tile.minimized { 
+    width: 140px; 
+    height: 79px; 
+    bottom: 110px; 
+    right: 12px; 
+    z-index: 1000; 
+  }
   .user-tag, .top-pill { display: none !important; }
-  
-  .footer-deck-wrapper { height: 72px; flex: 0 0 72px; }
-  .footer-deck { padding: 8px 12px; gap: 10px; border-radius: 16px; }
-  .ctrl { width: 42px; height: 42px; border-radius: 10px; }
-  .ctrl svg { width: 18px; height: 18px; }
-  .ctrl.hang { width: 56px; border-radius: 10px; }
 }
 </style>
 </head>
-<body class="chat-open">
+<body>
 
 <header class="header">
   <div class="brand">
     <div class="logo">☤</div>
-    <h1>Telemedicine Sync</h1>
+    <h1>Telehealth Workspace</h1>
   </div>
   <div class="connection">
     <div class="dot"></div>
@@ -454,6 +465,25 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
   </aside>
 </div>
 
+<div class="overlay" id="overlay">
+  <div class="overlay-bg-decor">
+    <div class="bg-grid"></div>
+    <div class="bg-aura-blob blob-primary"></div>
+    <div class="bg-aura-blob blob-secondary"></div>
+  </div>
+  <div class="card">
+    <div class="card-logo-container"><div class="card-logo">☤</div></div>
+    <small>TELEHEALTH SECURE NETWORKS</small>
+    <h1>Clinical Workspace</h1>
+    <p>Review patient analytics, drop secure files, and host real-time medical group consultations in an isolated sandbox pipeline.</p>
+    <div class="join-box">
+      <input id="nameInput" type="text" placeholder="Your Display Name">
+      <input id="roomInput" type="text" placeholder="Secure Room ID (e.g. room123)">
+      <button id="joinBtn">Join Workspace</button>
+    </div>
+  </div>
+</div>
+
 <div class="lightbox-overlay" id="lightboxOverlay">
   <div class="lightbox-controls">
     <button class="print-action-btn" id="printImageBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Print Image</button>
@@ -482,24 +512,26 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
 </div>
 
 <script>
-// UI Setup Handlers
+// WebRTC Signaling Engine States
 const videoGrid = document.getElementById('videoGrid');
 const micBtn = document.getElementById('micBtn');
 const camBtn = document.getElementById('camBtn');
 const chatBtn = document.getElementById('chatBtn');
 const closeChatBtn = document.getElementById('closeChatBtn');
 const hangBtn = document.getElementById('hangBtn');
+const overlay = document.getElementById('overlay');
+const joinBtn = document.getElementById('joinBtn');
+const nameInput = document.getElementById('nameInput');
+const roomInput = document.getElementById('roomInput');
 const statusText = document.getElementById('statusText');
 
-let stream = null; let micOn = true; let camOn = true;
-
-// CRITICAL MOBILE-ONLY FIX: FORCE CLOSED BY DEFAULT ON INITIAL LOAD
-if (window.innerWidth <= 900) {
-  document.body.classList.add('chat-collapsed');
-  chatBtn.classList.remove('active-chat');
-}
-
-// Custom Modals Core Handlers
+let stream = null; 
+let micOn = true; 
+let camOn = true;
+let peer = null;
+let dataConn = null;
+let activeCall = null;
+let displayName = "";
 let currentConfirmAction = null;
 
 function showCustomAlert(message) {
@@ -531,6 +563,7 @@ document.getElementById('customConfirmOkBtn').addEventListener('click', () => {
 function createParticipantTile(name, type = 'remote', streamObject = null) {
   const tile = document.createElement('div');
   tile.className = 'tile';
+  tile.id = `tile-${type}`;
   const initials = name.charAt(0).toUpperCase();
 
   tile.innerHTML = `
@@ -569,33 +602,36 @@ function createParticipantTile(name, type = 'remote', streamObject = null) {
   return { tile, video, placeholder };
 }
 
-function initializePeerConnection(roomId) {
-  console.log("Initializing web client handshake inside room context ID:", roomId);
-  if (typeof Peer !== 'undefined') {
-    const peer = new Peer();
-    peer.on('open', (id) => console.log('Peer assigned hash identifier key:', id));
+async function joinWorkspace() {
+  displayName = nameInput.value.trim();
+  const rawRoom = roomInput.value.trim();
+  
+  if (!displayName || !rawRoom) {
+    showCustomAlert("Please supply both your display name and a secure room ID.");
+    return;
   }
-}
 
-// Auto-run core context connection loops directly on launch
-window.addEventListener('DOMContentLoaded', async () => {
-  const name = "Doctor";
+  const cleanRoomId = "telehealth-room-" + rawRoom.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  joinBtn.disabled = true; 
+  joinBtn.textContent = 'Allocating Ports...';
   videoGrid.innerHTML = '';
 
   try { 
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: true }); 
     } else {
-      throw new Error('Sandbox context lock error');
+      throw new Error('Sandbox browser restriction');
     }
   } catch (e) { 
-    console.warn('Hardware stream initialization warning. Loading workspace graphical simulators.'); 
+    console.warn('Hardware permission failure. Initializing presentation placeholder layout.'); 
   }
 
   document.body.classList.add('joined');
-  statusText.textContent = name + " (Live)";
+  statusText.textContent = `${displayName} (Connecting)`;
+  overlay.classList.add('hide');
 
-  const localObj = createParticipantTile(name, 'local', stream);
+  const localObj = createParticipantTile(displayName, 'local', stream);
   const remoteObj = createParticipantTile('Consulting Peer', 'remote', null);
 
   remoteObj.tile.classList.add('maximized');
@@ -613,20 +649,143 @@ window.addEventListener('DOMContentLoaded', async () => {
   
   videoGrid.appendChild(remoteObj.tile); 
   videoGrid.appendChild(localObj.tile);
-  initializePeerConnection('telehealth-default-room');
-});
+
+  // Cross-OS Platform Agnostic Automatic Signaling Routine
+  initializePeerConnection(cleanRoomId);
+}
+
+function initializePeerConnection(targetRoomId) {
+  // First attempt to claim the room endpoint identifier as the Host node
+  peer = new Peer(targetRoomId);
+
+  peer.on('open', (id) => {
+    console.log('Registered securely as session host endpoint.');
+    statusText.textContent = `${displayName} (Awaiting Peer)`;
+    
+    // Listen for incoming call events from client terminal
+    peer.on('call', (call) => {
+      activeCall = call;
+      call.answer(stream);
+      bindCallStreamEvents(call);
+    });
+
+    // Listen for data synchronization pipeline connection
+    peer.on('connection', (conn) => {
+      dataConn = conn;
+      bindDataChannelEvents(conn);
+    });
+  });
+
+  peer.on('error', (err) => {
+    // If endpoint string is claimed, automatically transition into client subscriber mode
+    if (err.type === 'unavailable-id') {
+      console.log('Room occupied. Establishing handshake pipe as remote guest connection.');
+      peer = new Peer(); // Instantiates randomized identifier node
+      
+      peer.on('open', () => {
+        statusText.textContent = `${displayName} (Syncing Workspace)`;
+        
+        // Signal the active connection channel to host endpoint
+        const call = peer.call(targetRoomId, stream);
+        activeCall = call;
+        bindCallStreamEvents(call);
+
+        const conn = peer.connect(targetRoomId);
+        dataConn = conn;
+        bindDataChannelEvents(conn);
+      });
+    } else {
+      console.error('PeerJS Protocol Core Exception:', err);
+      showCustomAlert("Secure network pipeline registration failed.");
+    }
+  });
+}
+
+function bindCallStreamEvents(call) {
+  call.on('stream', (remoteStream) => {
+    statusText.textContent = `${displayName} (Live Connection)`;
+    const remoteContainer = document.getElementById('tile-remote');
+    if (remoteContainer) {
+      const video = remoteContainer.querySelector('video');
+      const placeholder = remoteContainer.querySelector('.placeholder');
+      video.srcObject = remoteStream;
+      video.onloadedmetadata = () => {
+        video.play();
+        placeholder.style.display = 'none';
+        remoteContainer.querySelector('.info span').textContent = 'Connected';
+      };
+    }
+  });
+
+  call.on('close', () => {
+    resetRemoteVisualState();
+  });
+}
+
+function bindDataChannelEvents(conn) {
+  conn.on('open', () => {
+    appendSystemNotice("Encrypted direct peer data pipeline online.");
+  });
+
+  conn.on('data', (data) => {
+    if (data.type === 'text') {
+      appendChatMessage(data.text, 'them', data.user);
+    } else if (data.type === 'image') {
+      appendImageMessage(data.base64, 'them');
+    } else if (data.type === 'prescription') {
+      appendRxCardToChat(data.rxData, 'them');
+    }
+  });
+
+  conn.on('close', () => {
+    appendSystemNotice("Data connection terminated by endpoint.");
+  });
+}
+
+function resetRemoteVisualState() {
+  const remoteContainer = document.getElementById('tile-remote');
+  if (remoteContainer) {
+    const video = remoteContainer.querySelector('video');
+    const placeholder = remoteContainer.querySelector('.placeholder');
+    video.srcObject = null;
+    placeholder.style.display = 'flex';
+    remoteContainer.querySelector('.info span').textContent = 'Connecting...';
+  }
+  statusText.textContent = `${displayName} (Awaiting Peer)`;
+}
+
+function appendSystemNotice(text) {
+  const notice = document.createElement('div');
+  notice.className = 'msg system';
+  notice.textContent = text;
+  messages.appendChild(notice);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function appendChatMessage(text, ownerClass, authorName) {
+  const textBubble = document.createElement('div');
+  textBubble.className = `msg ${ownerClass}`;
+  textBubble.innerHTML = ownerClass === 'me' ? text : `<strong>${authorName}:</strong><br>${text}`;
+  messages.appendChild(textBubble);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+joinBtn.addEventListener('click', joinWorkspace);
+[nameInput, roomInput].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); joinWorkspace(); } }));
 
 micBtn.addEventListener('click', () => { if(!stream) return; micOn = !micOn; stream.getAudioTracks().forEach(t => t.enabled = micOn); micBtn.classList.toggle('off', !micOn); });
 camBtn.addEventListener('click', () => { if(!stream) return; camOn = !camOn; stream.getVideoTracks().forEach(t => t.enabled = camOn); camBtn.classList.toggle('off', !camOn); });
 
+// IMMUTABLE INTERACTION FIX: System state toggling logic completely free of layout conflicts
 function toggleChatPanel() {
   document.body.classList.toggle('chat-collapsed');
-  chatBtn.classList.toggle('active-chat', !document.body.classList.contains('chat-collapsed'));
+  const isCollapsed = document.body.classList.contains('chat-collapsed');
+  chatBtn.classList.toggle('active-chat', !isCollapsed);
 }
 chatBtn.addEventListener('click', toggleChatPanel);
 closeChatBtn.addEventListener('click', toggleChatPanel);
 
-// Sidebar Tabs Controls
+// Sidebar Tabs Logic
 const tabChatBtn = document.getElementById('tabChatBtn');
 const tabRxBtn = document.getElementById('tabRxBtn');
 const viewChat = document.getElementById('viewChat');
@@ -640,122 +799,25 @@ function openRxTab() {
   tabRxBtn.classList.add('active'); tabChatBtn.classList.remove('active');
   viewRx.classList.add('active'); viewChat.classList.remove('active');
 }
+
 tabChatBtn.addEventListener('click', openChatTab);
 tabRxBtn.addEventListener('click', openRxTab);
 
 hangBtn.addEventListener('click', () => {
   if (stream) stream.getTracks().forEach(t => t.stop());
+  if (activeCall) activeCall.close();
+  if (dataConn) dataConn.close();
+  if (peer) peer.destroy();
+  
+  overlay.classList.remove('hide'); 
   document.body.classList.remove('joined');
-  statusText.textContent = 'Disconnected'; videoGrid.innerHTML = '';
-  showCustomAlert("Disconnected from workspace context.");
+  statusText.textContent = 'Disconnected'; 
+  videoGrid.innerHTML = '';
+  joinBtn.disabled = false; 
+  joinBtn.textContent = 'Join Workspace';
 });
 
-// Chat Engine Core Form Logic
-const photoInput = document.getElementById('photoInput');
-const triggerFileBtn = document.getElementById('triggerFileBtn');
-const uploadPreviewBar = document.getElementById('uploadPreviewBar');
-const previewThumb = document.getElementById('previewThumb');
-const removePreviewBtn = document.getElementById('removePreviewBtn');
-const chatForm = document.getElementById('chatForm');
-const chatInput = document.getElementById('chatInput');
-const messagesContainer = document.getElementById('messages');
-
-triggerFileBtn.addEventListener('click', () => photoInput.click());
-photoInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      previewThumb.src = event.target.result;
-      uploadPreviewBar.style.display = 'flex';
-    };
-    reader.readAsDataURL(file);
-  }
-});
-removePreviewBtn.addEventListener('click', () => {
-  photoInput.value = '';
-  uploadPreviewBar.style.display = 'none';
-  previewThumb.src = '';
-});
-
-chatForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const text = chatInput.value.trim();
-  const hasImg = uploadPreviewBar.style.display === 'flex';
-
-  if (!text && !hasImg) return;
-
-  if (hasImg) {
-    const wrap = document.createElement('div');
-    wrap.className = 'chat-img-wrap';
-    const img = document.createElement('img');
-    img.src = previewThumb.src;
-    img.addEventListener('click', () => {
-      document.getElementById('lightboxImg').src = img.src;
-      document.getElementById('lightboxOverlay').style.display = 'flex';
-    });
-    wrap.appendChild(img);
-    if (text) {
-      const msg = document.createElement('div');
-      msg.className = 'msg me';
-      msg.textContent = text;
-      wrap.appendChild(msg);
-    }
-    messagesContainer.appendChild(wrap);
-    photoInput.value = '';
-    uploadPreviewBar.style.display = 'none';
-    previewThumb.src = '';
-  } else {
-    const msg = document.createElement('div');
-    msg.className = 'msg me';
-    msg.textContent = text;
-    messagesContainer.appendChild(msg);
-  }
-  chatInput.value = '';
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-});
-
-document.getElementById('closeLightboxBtn').addEventListener('click', () => {
-  document.getElementById('lightboxOverlay').style.display = 'none';
-});
-document.getElementById('printImageBtn').addEventListener('click', () => {
-  const win = window.open('');
-  win.document.write(`<img src="${document.getElementById('lightboxImg').src}" style="max-width:100%;">`);
-  win.document.close();
-  win.focus();
-  win.print();
-  win.close();
-});
-
-// Medication Added Multi-Group Nodes Row Counter Engine
-let medCount = 1;
-document.getElementById('addMedBtn').addEventListener('click', () => {
-  medCount++;
-  const group = document.createElement('div');
-  group.className = 'med-group';
-  group.innerHTML = `
-    <div class="med-row-header">
-      <label style="font-size: 11px; font-weight: 700; color: var(--meet-green-dark); text-transform: uppercase; letter-spacing: 0.5px;">Medication #${medCount}</label>
-      <button type="button" class="remove-med-btn">&times; Remove</button>
-    </div>
-    <div class="rx-field">
-      <label>Medication Name</label>
-      <input type="text" class="rx-input rx-med-name" placeholder="e.g. Amoxicillin">
-    </div>
-    <div class="rx-field">
-      <label>Dosage strength</label>
-      <input type="text" class="rx-input rx-med-dosage" placeholder="e.g. 500mg">
-    </div>
-    <div class="rx-field">
-      <label>Frequency & Duration</label>
-      <input type="text" class="rx-input rx-med-freq" placeholder="e.g. 1 Tablet twice daily for 5 days">
-    </div>
-  `;
-  group.querySelector('.remove-med-btn').addEventListener('click', () => { group.remove(); });
-  document.getElementById('rxMedsContainer').appendChild(group);
-});
-
-// Prescription Management Logic
+// Prescription Management System
 function getRxData() {
   const medGroups = document.querySelectorAll('.med-group');
   const medsList = [];
@@ -779,71 +841,322 @@ function getRxData() {
     patient: document.getElementById('rxPatient').value.trim() || '_______________________',
     meds: medsList,
     notes: document.getElementById('rxNotes').value.trim() || '',
-    dateStr: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+    dateStr: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
   };
 }
 
-document.getElementById('sendChatRxBtn').addEventListener('click', () => {
-  showCustomConfirm("Send this digital prescription to the active chat session?", () => {
-    const data = getRxData();
-    const card = document.createElement('div');
-    card.className = 'rx-chat-card';
-    
-    let medsHtml = '';
-    data.meds.forEach((m, idx) => {
-      medsHtml += `<p><strong>Medication #${idx+1}:</strong> ${m.name} ${m.dosage} - ${m.freq}</p>`;
-    });
+function checkPrescriptionIsEmpty() {
+  const patient = document.getElementById('rxPatient').value.trim();
+  const notes = document.getElementById('rxNotes').value.trim();
+  let hasAnyMedicationData = false;
 
-    card.innerHTML = `
-      <div class="rx-chat-header"><span class="icon">℞</span> Prescription Doc</div>
-      <div class="rx-chat-body">
-        <p><strong>Patient:</strong> ${data.patient}</p>
-        ${medsHtml}
-        ${data.notes ? `<p><strong>Notes:</strong> ${data.notes}</p>` : ''}
-        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Issued: ${data.dateStr}</p>
+  document.querySelectorAll('.med-group').forEach(group => {
+    if (
+      group.querySelector('.rx-med-name').value.trim() ||
+      group.querySelector('.rx-med-dosage').value.trim() ||
+      group.querySelector('.rx-med-freq').value.trim()
+    ) {
+      hasAnyMedicationData = true;
+    }
+  });
+
+  return (!patient && !notes && !hasAnyMedicationData);
+}
+
+document.getElementById('addMedBtn').addEventListener('click', () => {
+  const container = document.getElementById('rxMedsContainer');
+  const nextIndex = container.querySelectorAll('.med-group').length + 1;
+  
+  const newGroup = document.createElement('div');
+  newGroup.className = 'med-group';
+  newGroup.innerHTML = `
+    <div class="med-row-header">
+      <label style="font-size: 11px; font-weight: 700; color: var(--meet-green-dark); text-transform: uppercase; letter-spacing: 0.5px;">Medication #${nextIndex}</label>
+      <button type="button" class="remove-med-btn">✕ Remove</button>
+    </div>
+    <div class="rx-field">
+      <label>Medication Name</label>
+      <input type="text" class="rx-input rx-med-name" placeholder="e.g. Amoxicillin">
+    </div>
+    <div class="rx-field">
+      <label>Dosage strength</label>
+      <input type="text" class="rx-input rx-med-dosage" placeholder="e.g. 500mg">
+    </div>
+    <div class="rx-field">
+      <label>Frequency & Duration</label>
+      <input type="text" class="rx-input rx-med-freq" placeholder="e.g. 1 Tablet twice daily for 5 days">
+    </div>
+  `;
+  
+  newGroup.querySelector('.remove-med-btn').addEventListener('click', () => {
+    newGroup.remove();
+    container.querySelectorAll('.med-group').forEach((g, idx) => {
+      g.querySelector('.med-row-header label').textContent = `Medication #${idx + 1}`;
+    });
+  });
+  
+  container.appendChild(newGroup);
+});
+
+window.executePrintRx = function(dataStr) {
+  const data = typeof dataStr === 'string' ? JSON.parse(decodeURIComponent(dataStr)) : dataStr;
+  
+  let dynamicMedsHTML = '';
+  data.meds.forEach((m, idx) => {
+    dynamicMedsHTML += `
+      <div class="medication-block" style="padding-left: 20px; border-left: 3px solid #e2e8f0; margin-bottom: 30px;">
+        <h2 style="font-size: 22px; font-weight: 700; margin: 0 0 8px 0; display: flex; align-items: baseline; gap: 10px;">
+          <span style="color: #64748b; font-size: 16px;">${idx + 1}.</span> ${m.name} ${m.dosage ? `<span class="dose" style="font-size: 18px; font-weight: 500; color: #475569;">— ${m.dosage}</span>` : ''}
+        </h2>
+        <p class="sig" style="font-size: 16px; margin: 0; color: #334155; line-height: 1.6;">
+          <strong style="color: #0f172a; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; margin-right: 5px;">Sig:</strong> ${m.freq}
+        </p>
       </div>
-      <div class="rx-chat-footer">
-        <button class="inline-print-btn rx-print-trigger">Print</button>
+    `;
+  });
+  
+  const rxHTML = `
+    <html>
+      <head>
+        <title>Prescription - ${data.patient}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap');
+          @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+          body { font-family: 'Inter', sans-serif; padding: 0; margin: 0; color: #0f172a; display: flex; justify-content: center; background: white; }
+          .rx-container { width: 100%; max-width: 800px; padding: 50px; position: relative; background: #ffffff; min-height: 100vh; box-sizing: border-box; }
+          .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 400px; font-family: 'Libre Baskerville', serif; color: rgba(19, 115, 51, 0.04); z-index: 0; pointer-events: none; margin: 0; padding: 0; line-height: 1; }
+          .content { position: relative; z-index: 10; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 4px solid #137333; padding-bottom: 25px; margin-bottom: 35px; }
+          .clinic-logo { display: flex; align-items: center; gap: 12px; }
+          .logo-mark { font-size: 38px; color: #137333; line-height: 1; }
+          .clinic-info h1 { font-family: 'Libre Baskerville', serif; margin: 0 0 4px 0; color: #137333; font-size: 26px; font-weight: 700; }
+          .clinic-info p { margin: 0; color: #64748b; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+          .doc-meta { text-align: right; }
+          .doc-meta p { margin: 0 0 6px 0; font-size: 14px; color: #475569; }
+          .doc-meta strong { color: #0f172a; }
+          .patient-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 25px; display: flex; justify-content: space-between; margin-bottom: 40px; }
+          .patient-block div h3 { font-size: 12px; text-transform: uppercase; color: #64748b; margin: 0 0 8px 0; letter-spacing: 0.5px; }
+          .patient-block div p { font-size: 18px; font-weight: 600; margin: 0; color: #0f172a; }
+          .rx-symbol { font-family: 'Libre Baskerville', serif; font-size: 72px; color: #137333; line-height: 1; margin: 0 0 20px 0; }
+          .notes { background: #fffbeb; padding: 16px 20px; border-radius: 8px; border-left: 4px solid #f59e0b; color: #78350f; font-size: 14px; line-height: 1.5; margin-top: 20px;}
+          .footer { margin-top: 80px; display: flex; justify-content: space-between; align-items: flex-end; }
+          .security-notice { font-size: 11px; color: #94a3b8; max-width: 350px; line-height: 1.5; }
+          .signature-box { width: 280px; text-align: center; }
+          .sig-line { border-bottom: 1px solid #0f172a; height: 40px; margin-bottom: 8px; }
+          .signature-box p { margin: 0; font-size: 13px; color: #0f172a; font-weight: 600; text-transform: uppercase; }
+          .signature-box span { font-size: 11px; color: #64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="rx-container">
+          <div class="watermark">℞</div>
+          <div class="content">
+            <div class="header">
+              <div class="clinic-logo">
+                <div class="logo-mark">☤</div>
+                <div class="clinic-info">
+                  <h1>Telehealth Clinical Network</h1>
+                  <p>Verified Digital E-Prescription</p>
+                </div>
+              </div>
+              <div class="doc-meta">
+                <p><strong>Date:</strong> ${data.dateStr}</p>
+                <p><strong>Ref:</strong> SEC-E-RX</p>
+              </div>
+            </div>
+            <div class="patient-block">
+              <div><h3>Patient Name</h3><p>${data.patient}</p></div>
+            </div>
+            <div class="rx-symbol">℞</div>
+            <div class="medications-wrapper">${dynamicMedsHTML}</div>
+            ${data.notes ? `<div class="notes"><strong>Clinical Notes:</strong><br>${data.notes}</div>` : ''}
+            <div class="footer">
+              <div class="security-notice">CONFIDENTIALITY NOTICE:<br>Generated securely via Telemedicine Portal. Legally privileged health communication layers.</div>
+              <div class="signature-box"><div class="sig-line"></div><p>Authorized Signature</p><span>Electronically Signed</span></div>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const printFrame = document.createElement('iframe');
+  printFrame.style.position = 'absolute'; printFrame.style.width = '0px'; printFrame.style.height = '0px'; printFrame.style.border = 'none';
+  document.body.appendChild(printFrame);
+  
+  const pDoc = printFrame.contentWindow.document;
+  pDoc.open(); pDoc.write(rxHTML); pDoc.close();
+
+  try {
+    setTimeout(() => {
+      printFrame.contentWindow.focus();
+      printFrame.contentWindow.print();
+      setTimeout(() => { document.body.removeChild(printFrame); }, 500);
+    }, 300);
+  } catch (err) {
+    showCustomAlert("Secure print generation completed, hardware intercept blocked inside standard sandbox runtime environments.");
+  }
+};
+
+document.getElementById('directPrintRxBtn').addEventListener('click', () => {
+  if (checkPrescriptionIsEmpty()) {
+    showCustomConfirm("You are sending an empty prescription. Do you want to send?", () => {
+      window.executePrintRx(getRxData());
+    });
+  } else {
+    window.executePrintRx(getRxData());
+  }
+});
+
+function appendRxCardToChat(data, ownerClass) {
+  let chatMedsList = '';
+  data.meds.forEach((m, idx) => {
+    chatMedsList += `
+      <div style="margin-bottom: 10px; border-left: 2px solid var(--meet-green-primary); padding-left: 8px;">
+        <strong style="color:var(--text); font-size:13px;">${idx + 1}. ${m.name}</strong> ${m.dosage ? `<span style="color:var(--muted); font-size:12px;">(${m.dosage})</span>` : ''}<br>
+        <span style="color: var(--muted); font-size: 12px; display:inline-block; margin-top:2px;">Sig: ${m.freq}</span>
+      </div>
+    `;
+  });
+
+  const encodedData = encodeURIComponent(JSON.stringify(data));
+  const cardDiv = document.createElement('div');
+  cardDiv.className = `rx-chat-card ${ownerClass}`;
+  cardDiv.innerHTML = `
+    <div class="rx-chat-header"><span class="icon">℞</span> Official Prescription Generated</div>
+    <div class="rx-chat-body">
+      <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;"><strong>Patient:</strong> ${data.patient}</div>
+      <div>${chatMedsList}</div>
+    </div>
+    <div class="rx-chat-footer">
+      <button class="inline-print-btn" onclick="window.executePrintRx('${encodedData}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Print Document
+      </button>
+    </div>
+  `;
+  
+  messages.appendChild(cardDiv);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+document.getElementById('sendChatRxBtn').addEventListener('click', () => {
+  const proceedWithSend = () => {
+    const data = getRxData();
+    
+    // Broadcast prescription metadata to remote client via WebRTC
+    if (dataConn && dataConn.open) {
+      dataConn.send({ type: 'prescription', rxData: data });
+    }
+
+    appendRxCardToChat(data, 'me');
+    
+    document.getElementById('rxPatient').value = '';
+    document.getElementById('rxNotes').value = '';
+    document.getElementById('rxMedsContainer').innerHTML = `
+      <div class="med-group">
+        <div class="med-row-header">
+          <label style="font-size: 11px; font-weight: 700; color: var(--meet-green-dark); text-transform: uppercase; letter-spacing: 0.5px;">Medication #1</label>
+        </div>
+        <div class="rx-field">
+          <label>Medication Name</label>
+          <input type="text" class="rx-input rx-med-name" placeholder="e.g. Amoxicillin">
+        </div>
+        <div class="rx-field">
+          <label>Dosage strength</label>
+          <input type="text" class="rx-input rx-med-dosage" placeholder="e.g. 500mg">
+        </div>
+        <div class="rx-field">
+          <label>Frequency & Duration</label>
+          <input type="text" class="rx-input rx-med-freq" placeholder="e.g. 1 Tablet twice daily for 5 days">
+        </div>
       </div>
     `;
     
-    card.querySelector('.rx-print-trigger').addEventListener('click', () => { printPrescriptionData(data); });
-    messagesContainer.appendChild(card);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
     openChatTab();
-  });
+  };
+
+  if (checkPrescriptionIsEmpty()) {
+    showCustomConfirm("You are sending an empty prescription. Do you want to send?", proceedWithSend);
+  } else {
+    proceedWithSend();
+  }
 });
 
-document.getElementById('directPrintRxBtn').addEventListener('click', () => {
-  const data = getRxData();
-  printPrescriptionData(data);
-});
+// Chat Interaction System
+const chatForm = document.getElementById('chatForm');
+const chatInput = document.getElementById('chatInput');
+const messages = document.getElementById('messages');
+const photoInput = document.getElementById('photoInput');
+const triggerFileBtn = document.getElementById('triggerFileBtn');
+const uploadPreviewBar = document.getElementById('uploadPreviewBar');
+const previewThumb = document.getElementById('previewThumb');
+const removePreviewBtn = document.getElementById('removePreviewBtn');
+const lightboxOverlay = document.getElementById('lightboxOverlay');
+const lightboxImg = document.getElementById('lightboxImg');
+const closeLightboxBtn = document.getElementById('closeLightboxBtn');
+const printImageBtn = document.getElementById('printImageBtn');
+let pendingImageBase64 = null;
 
-function printPrescriptionData(data) {
-  const win = window.open('', '_blank');
-  let medsLines = '';
-  data.meds.forEach((m, i) => {
-    medsLines += `<li><strong>${m.name}</strong> ${m.dosage} <br><small>${m.freq}</small></li>`;
-  });
-  win.document.write(`
-    <html>
-    <head><title>Prescription - ${data.patient}</title></head>
-    <body style="font-family:sans-serif; padding:40px; color:#1e293b;">
-      <h2 style="color:#34A853; border-bottom:2px solid #34A853; padding-bottom:10px;">℞ Telemedicine Sync - Prescription</h2>
-      <p><strong>Date:</strong> ${data.dateStr}</p>
-      <p><strong>Patient Name:</strong> ${data.patient}</p>
-      <hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;">
-      <h3>Medications:</h3>
-      <ul>${medsLines}</ul>
-      \${data.notes ? '<hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;"><h3>Notes / Directions:</h3><p>' + data.notes + '</p>' : ''}
-      <br><br><br>
-      <p style="border-top:1px solid #cbd5e1; display:inline-block; padding-top:5px; width:200px;">Authorized Electronic Signature</p>
-      <script>window.onload = function() { window.print(); window.close(); }</s` + `cript>
-    </body>
-    </html>
-  `);
-  win.document.close();
+triggerFileBtn.addEventListener('click', () => photoInput.click());
+photoInput.addEventListener('change', (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => { pendingImageBase64 = event.target.result; previewThumb.src = pendingImageBase64; uploadPreviewBar.style.display = 'flex'; };
+  reader.readAsDataURL(file);
+});
+removePreviewBtn.addEventListener('click', () => { pendingImageBase64 = null; photoInput.value = ''; uploadPreviewBar.style.display = 'none'; });
+
+function execPrintImg(targetSrc) {
+  if (!targetSrc) return;
+  const printFrame = document.createElement('iframe');
+  printFrame.style.position = 'absolute'; printFrame.style.width = '0px'; printFrame.style.height = '0px'; printFrame.style.border = 'none';
+  document.body.appendChild(printFrame);
+  const pDoc = printFrame.contentWindow.document;
+  pDoc.open();
+  pDoc.write(`<html><head><style>@media print{ body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;} img{max-width:100%;max-height:100vh;object-fit:contain;} }</style></head><body><img src="${targetSrc}" onload="window.print(); setTimeout(function(){ window.parent.document.body.removeChild(window.frameElement); }, 400);"></body></html>`);
+  pDoc.close();
 }
+
+function appendImageMessage(base64Data, ownerClass) {
+  const imgWrap = document.createElement('div'); 
+  imgWrap.className = `chat-img-wrap ${ownerClass}`;
+  const img = document.createElement('img'); 
+  img.src = base64Data;
+  img.onclick = () => { lightboxImg.src = img.src; lightboxOverlay.style.display = 'flex'; };
+  
+  const inlinePrint = document.createElement('button'); 
+  inlinePrint.className = 'inline-print-btn';
+  inlinePrint.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Print';
+  inlinePrint.onclick = () => execPrintImg(base64Data);
+  
+  imgWrap.appendChild(img); 
+  imgWrap.appendChild(inlinePrint); 
+  messages.appendChild(imgWrap);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+chatForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const text = chatInput.value.trim();
+  if (!text && !pendingImageBase64) return;
+  
+  if (text) {
+    if (dataConn && dataConn.open) {
+      dataConn.send({ type: 'text', text: text, user: displayName });
+    }
+    appendChatMessage(text, 'me', displayName);
+  }
+  if (pendingImageBase64) {
+    if (dataConn && dataConn.open) {
+      dataConn.send({ type: 'image', base64: pendingImageBase64 });
+    }
+    appendImageMessage(pendingImageBase64, 'me');
+  }
+  chatInput.value = ''; pendingImageBase64 = null; photoInput.value = ''; uploadPreviewBar.style.display = 'none';
+});
+
+closeLightboxBtn.addEventListener('click', () => { lightboxOverlay.style.display = 'none'; lightboxImg.src = ''; });
+printImageBtn.addEventListener('click', () => execPrintImg(lightboxImg.src));
 </script>
-</body>
+</body>   
 </html>
