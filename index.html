@@ -636,20 +636,43 @@ function createParticipantTile(name, type = 'remote', streamObject = null) {
   return { tile, video, placeholder };
 }
 
-// ─── Remote stream / disconnect helpers ───────────────────────────────────────
+// ─── PeerJS config with reliable STUN + free TURN (handles strict NAT/mobile) ──
+const PEER_CONFIG = {
+  debug: 0,
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun.cloudflare.com:3478' },
+      {
+        urls: 'turn:openrelay.metered.ca:80',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      }
+    ]
+  }
+};
 
 function handleRemoteStream(remoteStream) {
-  console.log('Remote stream received – attaching to video tile.');
+  console.log('REMOTE STREAM RECEIVED');
   if (remoteObj && remoteObj.video) {
     remoteObj.video.srcObject = remoteStream;
-    remoteObj.video.onloadedmetadata = () => {
-      remoteObj.video.play().catch(() => {});
-      if (remoteObj.placeholder) remoteObj.placeholder.style.display = 'none';
-      const span = remoteObj.tile.querySelector('.info span');
-      if (span) span.textContent = 'Connected';
-      document.body.classList.add('joined');
-      statusText.textContent = 'Connected (Live)';
-    };
+    remoteObj.video.play().catch(() => {});
+    if (remoteObj.placeholder) remoteObj.placeholder.style.display = 'none';
+    const span = remoteObj.tile.querySelector('.info span');
+    if (span) span.textContent = 'Connected';
+    statusText.textContent = 'Connected (Live)';
   }
 }
 
@@ -663,121 +686,82 @@ function handleRemoteDisconnect() {
     if (p) p.textContent = 'The remote peer has left the session.';
     const span = remoteObj.tile.querySelector('.info span');
     if (span) span.textContent = 'Disconnected';
+    statusText.textContent = 'Peer disconnected';
   }
 }
 
-// ─── Guest: connect to an already-claimed room ────────────────────────────────
+function setupCallHandlers(call) {
+  currentCall = call;
+  call.on('stream', handleRemoteStream);
+  call.on('close', handleRemoteDisconnect);
+  call.on('error', (err) => console.error('Call error:', err));
+}
 
 function connectAsGuest(roomId) {
-  console.log('Room is taken – joining as guest caller...');
+  console.log('GUEST MODE: room taken, will call host ID:', roomId);
+  if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
 
-  // Destroy any stale peer before creating a new one
-  if (peer) { try { peer.destroy(); } catch(e) {} }
+  peer = new Peer(undefined, PEER_CONFIG);
 
-  peer = new Peer(); // let PeerJS assign a random ID
-
-  peer.on('open', (id) => {
-    console.log('Guest peer ID assigned:', id);
-
-    if (!stream) {
-      console.error('No local stream available – cannot call host.');
-      showCustomAlert('Camera/mic access is required to connect. Please allow permissions and try again.');
-      return;
-    }
-
-    // Small delay so the host side has time to finish registering its call handler
+  peer.on('open', (myId) => {
+    console.log('Guest peer open, ID:', myId, '- calling host in 800ms');
+    statusText.textContent = 'Calling host...';
     setTimeout(() => {
-      console.log('Calling host peer ID:', roomId);
+      if (!stream) { showCustomAlert('No camera stream. Reload and allow camera access.'); return; }
       const call = peer.call(roomId, stream);
-
-      if (!call) {
-        console.error('peer.call() returned null – host may not exist yet.');
-        showCustomAlert('Could not reach the host. Make sure the other device joined first, then try again.');
-        return;
-      }
-
-      currentCall = call;
-
-      call.on('stream', (remoteStream) => {
-        handleRemoteStream(remoteStream);
-      });
-
-      call.on('close', () => {
-        handleRemoteDisconnect();
-      });
-
-      call.on('error', (err) => {
-        console.error('Call error (guest):', err);
-      });
-    }, 1000); // 1 s grace period for host listener registration
+      if (!call) { showCustomAlert('Could not reach host. Make sure Device 1 joined first, then try again.'); return; }
+      setupCallHandlers(call);
+      console.log('Call placed to host:', roomId);
+    }, 800);
   });
 
   peer.on('error', (err) => {
-    console.error('Guest peer error:', err.type, err);
-    showCustomAlert('Connection error (' + err.type + '). Check your network and try again.');
+    console.error('GUEST error:', err.type, err.message);
+    if (err.type === 'network' || err.type === 'server-error') {
+      setTimeout(() => connectAsGuest(roomId), 3000);
+    } else {
+      showCustomAlert('Connection error: ' + err.type + '. Try reloading on both devices.');
+    }
   });
+
+  peer.on('disconnected', () => { console.warn('Guest disconnected from broker, reconnecting'); peer.reconnect(); });
 }
 
-// ─── Host: claim the room ID and wait for the guest to call in ────────────────
-
 function initializePeerConnection(roomId) {
-  console.log('Starting peer connection for room:', roomId);
+  if (typeof Peer === 'undefined') { showCustomAlert('PeerJS failed to load. Check internet and reload.'); return; }
+  if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
 
-  if (typeof Peer === 'undefined') {
-    showCustomAlert('Error: PeerJS library failed to load. Check your internet connection.');
-    return;
-  }
-
-  // Destroy any stale peer
-  if (peer) { try { peer.destroy(); } catch(e) {} }
-
-  // Use a short, stable room ID so both peers can find each other
-  peer = new Peer(roomId, {
-    debug: 2 // useful for diagnosing issues in the browser console
-  });
+  console.log('HOST MODE: claiming peer ID:', roomId);
+  peer = new Peer(roomId, PEER_CONFIG);
 
   peer.on('open', (id) => {
-    console.log('Claimed host peer ID:', id, '– waiting for guest to call in...');
+    console.log('HOST peer open, ID:', id, '- waiting for guest...');
     statusText.textContent = 'Waiting for guest...';
 
-    // Answer any incoming call from the guest
     peer.on('call', (incomingCall) => {
-      console.log('Incoming call from guest – answering...');
-
-      if (!stream) {
-        console.error('No local stream – cannot answer call.');
-        return;
-      }
-
-      currentCall = incomingCall;
+      console.log('INCOMING CALL - answering...');
+      if (!stream) { console.error('No stream to answer with'); return; }
       incomingCall.answer(stream);
-
-      incomingCall.on('stream', (remoteStream) => {
-        handleRemoteStream(remoteStream);
-      });
-
-      incomingCall.on('close', () => {
-        handleRemoteDisconnect();
-      });
-
-      incomingCall.on('error', (err) => {
-        console.error('Call error (host):', err);
-      });
+      setupCallHandlers(incomingCall);
     });
   });
 
   peer.on('error', (err) => {
     if (err.type === 'unavailable-id' || err.type === 'id-taken') {
-      // Room is already claimed – join as guest instead
-      console.log('Room ID already taken – switching to guest mode...');
+      console.log('Host ID taken - switching to GUEST mode');
       connectAsGuest(roomId);
+    } else if (err.type === 'network' || err.type === 'server-error') {
+      console.warn('Broker hiccup, retrying host in 3s:', err.type);
+      statusText.textContent = 'Connecting...';
+      setTimeout(() => initializePeerConnection(roomId), 3000);
     } else {
-      console.error('Host peer error:', err.type, err);
-      showCustomAlert('Connection error (' + err.type + '). Check your network and try again.');
+      console.error('HOST error:', err.type, err.message);
+      showCustomAlert('Connection error: ' + err.type + '. Reload the page on both devices and try again.');
     }
   });
-}
 
+  peer.on('disconnected', () => { console.warn('Host disconnected from broker, reconnecting'); statusText.textContent = 'Reconnecting...'; peer.reconnect(); });
+}
 // ─── Join Workspace button ─────────────────────────────────────────────────────
 // IMPORTANT: Both devices MUST use the same ROOM_ID to find each other.
 // PeerJS free broker has a 50-char ID limit – keep it short and alphanumeric only.
