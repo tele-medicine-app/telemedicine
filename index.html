@@ -35,7 +35,7 @@ html, body {
   gap: 16px;
 }
 
-/* Landing Page Overlay */
+/* Landing Page Overlay - No Room Inputs */
 .landing-overlay {
   position: fixed; inset: 0; background: var(--bg-app); z-index: 500;
   display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -179,22 +179,7 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 .ctrl:hover svg { transform: scale(1.06); }
 .ctrl.off { background: #fef2f2 !important; border-color: #fee2e2 !important; color: #ef4444 !important; }
 .ctrl.active-chat { background: #f0fdf4 !important; border-color: #dcfce7 !important; color: #16a34a !important; }
-
-/* Hang Up Button Core UI Fixes */
-.ctrl.hang { 
-  width: 68px; 
-  border-radius: 14px; 
-  background: #ef4444 !important; 
-  border-color: #ef4444 !important; 
-  color: #ffffff !important; 
-  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25) !important; 
-}
-.ctrl.hang svg { 
-  width: 24px; 
-  height: 24px; 
-  fill: #ffffff !important; 
-  stroke: none !important; 
-}
+.ctrl.hang { width: 68px; border-radius: 14px; background: #ef4444 !important; border-color: #ef4444 !important; color: #ffffff !important; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25) !important; }
 
 /* Sidebar Layout */
 .sidebar-panel {
@@ -288,7 +273,7 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
 
 /* Lightbox */
 .lightbox-overlay { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.98); z-index: 300; display: none; justify-content: center; align-items: center; flex-direction: column; }
-.lightbox-content { max-width: 85vw; max-height: 75vh; border-radius: 20px; box-shadow: var(--shadow-island); border: 1px solid var(--border); display: flex; flex-direction: column; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.lightbox-content { max-width: 85vw; max-height: 75vh; border-radius: 20px; box-shadow: var(--shadow-island); border: 1px solid var(--border); }
 .lightbox-controls { position: absolute; top: 32px; right: 32px; display: flex; gap: 16px; }
 .print-action-btn, .close-lightbox-btn { padding: 14px 24px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; border: none; }
 .print-action-btn { background: var(--meet-green-primary); color: white; }
@@ -324,20 +309,54 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
   .main { grid-template-columns: 1fr; }
   
   .sidebar-panel {
-    position: fixed; left: 0; right: 0; top: 0; z-index: 200; width: 100vw; height: 100%;
-    border-radius: 0; border: none; display: flex !important; flex-direction: column; margin: 0; padding: 0;
-    transform: translateX(0); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 200;
+    width: 100vw;
+    height: 100%;
+    border-radius: 0;
+    border: none;
+    display: flex !important;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  body.chat-collapsed .sidebar-panel { transform: translateX(100%); pointer-events: none; }
-  .view-container.active { display: flex; flex: 1; flex-direction: column; overflow: hidden; }
+  body.chat-collapsed .sidebar-panel {
+    transform: translateX(100%);
+    pointer-events: none;
+  }
+  
+  .view-container.active {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
   .sidebar-header { padding: 12px 16px; flex-shrink: 0; }
   .tab-btn { padding: 8px 16px; font-size: 14px; }
   
-  .messages { flex: 1; padding: 16px; gap: 12px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .messages { 
+    flex: 1; 
+    padding: 16px; 
+    gap: 12px; 
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .msg { padding: 12px 14px; font-size: 13px; max-width: 90%; }
   
-  .chat-input-area { flex-shrink: 0; padding: 12px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom)); background: var(--panel); border-top: 1px solid var(--border); }
+  .chat-input-area { 
+    flex-shrink: 0;
+    padding: 12px 16px; 
+    padding-bottom: max(12px, env(safe-area-inset-bottom)); 
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+  }
   .input-wrap { padding: 4px 4px 4px 12px; }
   .input-wrap input[type="text"] { font-size: 14px; padding: 8px 0; }
   .icon-btn, .send { width: 38px; height: 38px; }
@@ -393,12 +412,9 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
         <button class="ctrl" id="micBtn" aria-label="Mute"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"></rect><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="21" x2="12" y2="23"></line><line x1="9" y1="23" x2="15" y2="23"></line></svg></button>
         <button class="ctrl" id="camBtn" aria-label="Camera"><svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="3" ry="3"></rect></svg></button>
         <button class="ctrl active-chat" id="chatBtn" aria-label="Sidebar"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="8" y1="8" x2="16" y2="8" stroke-width="1.8" opacity="0.7"></line><line x1="8" y1="12" x2="14" y2="12" stroke-width="1.8" opacity="0.7"></line></svg></button>
-        
-        <!-- ABSOLUTE BUG FIX FOR DISCONNECTED METRICS VIEWPORT -->
         <button class="ctrl hang" id="hangBtn" aria-label="Leave">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm1 14.5v-3.5c3.04 0 5.61 1.9 6.6 4.54l1.23-.74C19.53 14.28 16.5 12 13 12v-2l-4 3.5 4 3.5zM4.17 14.8c.99-2.64 3.56-4.54 6.6-4.54V6.75L6.77 10.25l4 3.5v-2c2.16 0 4.04.87 5.41 2.27l1.06-1.06C15.42 11.14 12.89 10 10.77 10H10.5V7.5L6.5 11l4 3.5v-2.24c3.01.07 5.51 1.95 6.47 4.54l1.2-.77c-1.25-3.32-4.56-5.73-8.47-5.73-1.04 0-2.04.2-2.96.55L5.7 9.8C4.54 11.16 4 12.92 4 14.8c0 .24.01.48.04.71l1.24-.76c-.07-.31-.11-.63-.11-.95z" style="display:none;"/>
-            <path d="M4.51 15.19c1.94-1.74 4.56-2.69 7.49-2.69s5.55.95 7.49 2.69c.53.48 1.34.4 1.77-.18l1.45-1.93c.4-.53.33-1.28-.17-1.73C19.41 8.84 15.87 7.5 12 7.5s-7.41 1.34-10.54 3.85c-.5.45-.57 1.2-.17 1.73l1.45 1.93c.43.58 1.24.66 1.77.18z"/>
+          <svg viewBox="0 0 24 24" style="fill: currentColor; stroke: none; width: 24px; height: 24px;">
+            <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39.23.74.56.9.98.49 2.04.74 3.15.74s2.17-.26 3.15-.74c.32-.15.56-.51.56-.9v-3.1c-1.45-.47-3-.72-4.6-.72z"/>
           </svg>
         </button>
       </section>
@@ -528,8 +544,8 @@ const landingPage = document.getElementById('landingPage');
 
 let stream = null; let micOn = true; let camOn = true;
 let peer = null; let currentCall = null; let remoteObj = null;
-let connectionWatchdog = null; 
 
+// Mobile View Adjuster Engine
 function handleMobileViewHeight() {
   if (window.innerWidth <= 900) {
     if (!document.body.classList.contains('chat-collapsed') && window.visualViewport) {
@@ -547,12 +563,14 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('scroll', handleMobileViewHeight);
 }
 
+// Initial Mobile Load Workspace Visibility Layout Look
 if (window.innerWidth <= 900) {
   document.body.classList.add('chat-collapsed');
   document.body.classList.remove('chat-open');
   chatBtn.classList.remove('active-chat');
 }
 
+// Alerts / Confirm Logic
 let currentConfirmAction = null;
 
 function showCustomAlert(message) {
@@ -622,6 +640,7 @@ function createParticipantTile(name, type = 'remote', streamObject = null) {
   return { tile, video, placeholder };
 }
 
+// ─── PeerJS config with reliable STUN + free TURN (handles strict NAT/mobile) ──
 const PEER_CONFIG = {
   debug: 0,
   config: {
@@ -630,17 +649,27 @@ const PEER_CONFIG = {
       { urls: 'stun:stun1.l.google.com:19302' },
       { urls: 'stun:stun2.l.google.com:19302' },
       { urls: 'stun:stun.cloudflare.com:3478' },
-      { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-      { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-      { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+      {
+        urls: 'turn:openrelay.metered.ca:80',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      }
     ]
   }
 };
 
 function handleRemoteStream(remoteStream) {
   console.log('REMOTE STREAM RECEIVED');
-  if (connectionWatchdog) { clearTimeout(connectionWatchdog); connectionWatchdog = null; }
-  
   if (remoteObj && remoteObj.video) {
     remoteObj.video.srcObject = remoteStream;
     remoteObj.video.play().catch(() => {});
@@ -666,7 +695,6 @@ function handleRemoteDisconnect() {
 }
 
 function setupCallHandlers(call) {
-  if (!call) return;
   currentCall = call;
   call.on('stream', handleRemoteStream);
   call.on('close', handleRemoteDisconnect);
@@ -680,27 +708,14 @@ function connectAsGuest(roomId) {
   peer = new Peer(undefined, PEER_CONFIG);
 
   peer.on('open', (myId) => {
+    console.log('Guest peer open, ID:', myId, '- calling host in 800ms');
     statusText.textContent = 'Calling host...';
-    
-    peer.on('call', (incomingCall) => {
-      if (!stream) return;
-      setupCallHandlers(incomingCall);
-      incomingCall.answer(stream);
-    });
-
     setTimeout(() => {
       if (!stream) { showCustomAlert('No camera stream. Reload and allow camera access.'); return; }
       const call = peer.call(roomId, stream);
+      if (!call) { showCustomAlert('Could not reach host. Make sure Device 1 joined first, then try again.'); return; }
       setupCallHandlers(call);
-
-      if (connectionWatchdog) clearTimeout(connectionWatchdog);
-      connectionWatchdog = setTimeout(() => {
-        if (statusText.textContent !== 'Connected (Live)') {
-          console.warn('Ghost host fallback triggered. Forcing Host claims...');
-          initializePeerConnection(roomId);
-        }
-      }, 5000);
-
+      console.log('Call placed to host:', roomId);
     }, 800);
   });
 
@@ -713,50 +728,55 @@ function connectAsGuest(roomId) {
     }
   });
 
-  peer.on('disconnected', () => { peer.reconnect(); });
+  peer.on('disconnected', () => { console.warn('Guest disconnected from broker, reconnecting'); peer.reconnect(); });
 }
 
 function initializePeerConnection(roomId) {
   if (typeof Peer === 'undefined') { showCustomAlert('PeerJS failed to load. Check internet and reload.'); return; }
   if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
 
+  console.log('HOST MODE: claiming peer ID:', roomId);
   peer = new Peer(roomId, PEER_CONFIG);
 
   peer.on('open', (id) => {
+    console.log('HOST peer open, ID:', id, '- waiting for guest...');
     statusText.textContent = 'Waiting for guest...';
 
     peer.on('call', (incomingCall) => {
+      console.log('INCOMING CALL - answering...');
       if (!stream) { console.error('No stream to answer with'); return; }
-      setupCallHandlers(incomingCall);
       incomingCall.answer(stream);
+      setupCallHandlers(incomingCall);
     });
   });
 
   peer.on('error', (err) => {
     if (err.type === 'unavailable-id' || err.type === 'id-taken') {
+      console.log('Host ID taken - switching to GUEST mode');
       connectAsGuest(roomId);
     } else if (err.type === 'network' || err.type === 'server-error') {
+      console.warn('Broker hiccup, retrying host in 3s:', err.type);
       statusText.textContent = 'Connecting...';
       setTimeout(() => initializePeerConnection(roomId), 3000);
     } else {
+      console.error('HOST error:', err.type, err.message);
       showCustomAlert('Connection error: ' + err.type + '. Reload the page on both devices and try again.');
     }
   });
 
-  peer.on('disconnected', () => { statusText.textContent = 'Reconnecting...'; peer.reconnect(); });
+  peer.on('disconnected', () => { console.warn('Host disconnected from broker, reconnecting'); statusText.textContent = 'Reconnecting...'; peer.reconnect(); });
 }
-
-const ROOM_ID = 'telehealth-room-1'; 
+// ─── Join Workspace button ─────────────────────────────────────────────────────
+// IMPORTANT: Both devices MUST use the same ROOM_ID to find each other.
+// PeerJS free broker has a 50-char ID limit – keep it short and alphanumeric only.
+const ROOM_ID = 'telehealth-room-1'; // ← change this if you want a private room
 
 startSessionBtn.addEventListener('click', async () => {
-  document.getElementById('customAlertModal').classList.remove('show');
-  document.getElementById('customConfirmModal').classList.remove('show');
-  if (connectionWatchdog) { clearTimeout(connectionWatchdog); connectionWatchdog = null; }
-
   landingPage.style.display = 'none';
   videoGrid.innerHTML = '';
   statusText.textContent = 'Requesting camera…';
 
+  // 1. Get local media FIRST – before touching PeerJS
   try {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -764,14 +784,16 @@ startSessionBtn.addEventListener('click', async () => {
         audio: true
       });
     } else {
-      throw new Error('getUserMedia not supported in this browser context.');
+      throw new Error('getUserMedia not supported in this browser/context.');
     }
   } catch (e) {
-    showCustomAlert('Could not access camera or microphone.\n\nMake sure you:\n• Allowed camera/mic permission\n• Are using HTTPS\n• Are not blocking WebRTC');
+    console.warn('Could not get camera/mic:', e.message);
+    showCustomAlert('Could not access camera or microphone.\n\nMake sure you:\n• Allowed camera/mic permission\n• Are using HTTPS (not http://)\n• Are not in a browser that blocks WebRTC');
     landingPage.style.display = 'flex';
-    return; 
+    return; // stop here – we NEED the stream to make WebRTC calls
   }
 
+  // 2. Build the local video tile
   document.body.classList.add('joined');
   statusText.textContent = 'Connecting…';
 
@@ -798,6 +820,7 @@ startSessionBtn.addEventListener('click', async () => {
   videoGrid.appendChild(remoteObj.tile);
   videoGrid.appendChild(localObj.tile);
 
+  // 3. Now initialise PeerJS (stream is guaranteed non-null here)
   initializePeerConnection(ROOM_ID);
 });
 
@@ -833,23 +856,16 @@ tabChatBtn.addEventListener('click', openChatTab);
 tabRxBtn.addEventListener('click', openRxTab);
 
 hangBtn.addEventListener('click', () => {
-  if (connectionWatchdog) { clearTimeout(connectionWatchdog); connectionWatchdog = null; }
   if (stream) stream.getTracks().forEach(t => t.stop());
-  if (currentCall) { try { currentCall.close(); } catch(e){} currentCall = null; }
-  
-  if (peer) {
-    try { peer.disconnect(); } catch(e){}
-    try { peer.destroy(); } catch(e){}
-    peer = null;
-  }
-  
+  if (currentCall) currentCall.close();
+  if (peer) peer.destroy();
   document.body.classList.remove('joined');
   statusText.textContent = 'Disconnected'; videoGrid.innerHTML = '';
   showCustomAlert("Session terminated.");
   landingPage.style.display = 'flex';
 });
 
-// Chat Data Mechanics
+// Chat Attachments Processing
 const photoInput = document.getElementById('photoInput');
 const triggerFileBtn = document.getElementById('triggerFileBtn');
 const uploadPreviewBar = document.getElementById('uploadPreviewBar');
@@ -926,6 +942,7 @@ document.getElementById('printImageBtn').addEventListener('click', () => {
   win.close();
 });
 
+// Medication Added Multi-Group Row Manager
 let medCount = 1;
 document.getElementById('addMedBtn').addEventListener('click', () => {
   medCount++;
@@ -953,6 +970,7 @@ document.getElementById('addMedBtn').addEventListener('click', () => {
   document.getElementById('rxMedsContainer').appendChild(group);
 });
 
+// Prescription Management Formatting Logic
 function getRxData() {
   const medGroups = document.querySelectorAll('.med-group');
   const medsList = [];
