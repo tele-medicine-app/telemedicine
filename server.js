@@ -82,4 +82,4 @@ wss.on('connection', (ws) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Secure core connection bridge driving live on port: ${PORT}`);
-});
+}); 
