@@ -35,7 +35,7 @@ html, body {
   gap: 16px;
 }
 
-/* Landing Page Overlay */
+/* Landing Page Overlay - No Room Inputs */
 .landing-overlay {
   position: fixed; inset: 0; background: var(--bg-app); z-index: 500;
   display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -309,22 +309,53 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
   .main { grid-template-columns: 1fr; }
   
   .sidebar-panel {
-    position: fixed; left: 0; right: 0; top: 0; z-index: 200; width: 100vw; height: 100%;
-    border-radius: 0; border: none; display: flex !important; flex-direction: column; margin: 0; padding: 0;
-    transform: translateX(0); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 200;
+    width: 100vw;
+    height: 100%;
+    border-radius: 0;
+    border: none;
+    display: flex !important;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  body.chat-collapsed .sidebar-panel { transform: translateX(100%); pointer-events: none; }
-  .view-container.active { display: flex; flex: 1; flex-direction: column; overflow: hidden; }
+  body.chat-collapsed .sidebar-panel {
+    transform: translateX(100%);
+    pointer-events: none;
+  }
+  
+  .view-container.active {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
   .sidebar-header { padding: 12px 16px; flex-shrink: 0; }
   .tab-btn { padding: 8px 16px; font-size: 14px; }
   
-  .messages { flex: 1; padding: 16px; gap: 12px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .messages { 
+    flex: 1; 
+    padding: 16px; 
+    gap: 12px; 
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .msg { padding: 12px 14px; font-size: 13px; max-width: 90%; }
   
   .chat-input-area { 
-    flex-shrink: 0; padding: 12px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom)); 
-    background: var(--panel); border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    padding: 12px 16px; 
+    padding-bottom: max(12px, env(safe-area-inset-bottom)); 
+    background: var(--panel);
+    border-top: 1px solid var(--border);
   }
   .input-wrap { padding: 4px 4px 4px 12px; }
   .input-wrap input[type="text"] { font-size: 14px; padding: 8px 0; }
@@ -381,9 +412,7 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
         <button class="ctrl" id="micBtn" aria-label="Mute"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"></rect><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="21" x2="12" y2="23"></line><line x1="9" y1="23" x2="15" y2="23"></line></svg></button>
         <button class="ctrl" id="camBtn" aria-label="Camera"><svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="3" ry="3"></rect></svg></button>
         <button class="ctrl active-chat" id="chatBtn" aria-label="Sidebar"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="8" y1="8" x2="16" y2="8" stroke-width="1.8" opacity="0.7"></line><line x1="8" y1="12" x2="14" y2="12" stroke-width="1.8" opacity="0.7"></line></svg></button>
-        <button class="ctrl hang" id="hangBtn" aria-label="Leave">
-          <svg viewBox="0 0 24 24" style="transform: rotate(135deg);"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" fill="currentColor"></path></svg>
-        </button>
+        <button class="ctrl hang" id="hangBtn" aria-label="Leave"><svg viewBox="0 0 24 24"><path d="M10.68 13.31a16 16 0 0 0 2.64 0 2.5 2.5 0 0 1 1.91.75l1.63 1.63a1 1 0 0 0 1.41 0l2.44-2.44a1 1 0 0 0 0-1.41l-1.63-1.63a2.5 2.5 0 0 1-.75-1.91 16 16 0 0 0-12.68 0 2.5 2.5 0 0 1-.75 1.91l-1.63 1.63a1 1 0 0 0 0 1.41l2.44-2.44a1 1 0 0 0 1.41 0l1.63-1.63a2.5 2.5 0 0 1 1.91-.75z"></path></svg></button>
       </section>
     </div>
   </section>
@@ -509,12 +538,10 @@ const messages = document.getElementById('messages');
 const startSessionBtn = document.getElementById('startSessionBtn');
 const landingPage = document.getElementById('landingPage');
 
-let stream = null; 
-let micOn = true; 
-let camOn = true;
-let peer = null;
-let currentCall = null;
+let stream = null; let micOn = true; let camOn = true;
+let peer = null; let currentCall = null; let remoteObj = null;
 
+// Mobile View Adjuster Engine
 function handleMobileViewHeight() {
   if (window.innerWidth <= 900) {
     if (!document.body.classList.contains('chat-collapsed') && window.visualViewport) {
@@ -532,12 +559,14 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('scroll', handleMobileViewHeight);
 }
 
+// Initial Mobile Load Workspace Visibility Layout Look
 if (window.innerWidth <= 900) {
   document.body.classList.add('chat-collapsed');
   document.body.classList.remove('chat-open');
   chatBtn.classList.remove('active-chat');
 }
 
+// Alerts / Confirm Logic
 let currentConfirmAction = null;
 
 function showCustomAlert(message) {
@@ -607,71 +636,88 @@ function createParticipantTile(name, type = 'remote', streamObject = null) {
   return { tile, video, placeholder };
 }
 
-// Fixed Production Handshake Engine
-function initializePeerConnection(roomId, localStream, remoteObj) {
+// Fixed Signaling Pipeline Engine
+function handleRemoteStream(remoteStream) {
+  console.log('Remote streaming handshake success. Rendering layout pipeline.');
+  if (remoteObj && remoteObj.video) {
+    remoteObj.video.srcObject = remoteStream;
+    remoteObj.video.onloadedmetadata = () => {
+      remoteObj.video.play();
+      if (remoteObj.placeholder) remoteObj.placeholder.style.display = 'none';
+      const span = remoteObj.tile.querySelector('.info span');
+      if (span) span.textContent = 'Connected';
+    };
+  }
+}
+
+function handleRemoteDisconnect() {
+  if (remoteObj && remoteObj.placeholder) {
+    remoteObj.video.srcObject = null;
+    remoteObj.placeholder.style.display = 'flex';
+    const h2 = remoteObj.placeholder.querySelector('h2');
+    if (h2) h2.textContent = 'Disconnected';
+    const p = remoteObj.placeholder.querySelector('p');
+    if (p) p.textContent = 'The remote peer has left the session.';
+    const span = remoteObj.tile.querySelector('.info span');
+    if (span) span.textContent = 'Disconnected';
+  }
+}
+
+function connectAsGuest(roomId) {
+  peer = new Peer();
+  peer.on('open', (id) => {
+    console.log('Registered with sandbox client cluster nodes. Access ID:', id);
+    const call = peer.call(roomId, stream);
+    currentCall = call;
+    call.on('stream', (remoteStream) => {
+      handleRemoteStream(remoteStream);
+    });
+    call.on('close', () => {
+      handleRemoteDisconnect();
+    });
+  });
+  peer.on('error', (err) => {
+    console.error('Guest node synchronization exception:', err);
+  });
+}
+
+function initializePeerConnection(roomId) {
+  console.log("Initializing sync handshakes for common context ID:", roomId);
   if (typeof Peer === 'undefined') {
-    showCustomAlert("WebRTC framework library missing.");
+    showCustomAlert("Error: Signaling runtime library not found.");
     return;
   }
 
-  const hostId = `${roomId}-host`;
-  peer = new Peer(hostId);
+  // Attempt to claim primary node channel (Host)
+  peer = new Peer(roomId);
 
   peer.on('open', (id) => {
-    console.log('Room established. Running as host node:', id);
+    console.log('Verified primary sandbox cluster channel host ID:', id);
+    // Listen for incoming call events from client pairs
     peer.on('call', (call) => {
+      console.log('Incoming streaming invitation detected.');
       currentCall = call;
-      call.answer(localStream);
-      bindCallStreams(call, remoteObj);
+      call.answer(stream);
+      call.on('stream', (remoteStream) => {
+        handleRemoteStream(remoteStream);
+      });
+      call.on('close', () => {
+        handleRemoteDisconnect();
+      });
     });
   });
 
   peer.on('error', (err) => {
     if (err.type === 'id-taken') {
-      console.log('Host channel occupied. Connecting as guest node...');
-      peer.destroy();
-
-      const guestId = `${roomId}-guest-${Math.floor(Math.random() * 10000)}`;
-      peer = new Peer(guestId);
-
-      peer.on('open', () => {
-        console.log('Guest linked. Dialing target room host...');
-        const call = peer.call(hostId, localStream);
-        currentCall = call;
-        bindCallStreams(call, remoteObj);
-      });
+      console.log('Primary communication bridge claimed. Connecting as pipeline child node...');
+      connectAsGuest(roomId);
     } else {
-      console.error('Signaling failure:', err);
+      console.error('Critical bridge node communication error:', err.type, err);
     }
   });
 }
 
-function bindCallStreams(call, remoteObj) {
-  call.on('stream', (remoteStream) => {
-    if (remoteObj && remoteObj.video) {
-      remoteObj.video.srcObject = remoteStream;
-      remoteObj.video.onloadedmetadata = () => {
-        remoteObj.video.play();
-        remoteObj.placeholder.style.display = 'none';
-        const label = remoteObj.tile.querySelector('.info span');
-        if (label) label.textContent = 'Connected';
-      };
-    }
-  });
-
-  call.on('close', () => handleRemoteDisconnection(remoteObj));
-  call.on('error', () => handleRemoteDisconnection(remoteObj));
-}
-
-function handleRemoteDisconnection(remoteObj) {
-  if (remoteObj && remoteObj.video) {
-    remoteObj.video.srcObject = null;
-    remoteObj.placeholder.style.display = 'flex';
-    const label = remoteObj.tile.querySelector('.info span');
-    if (label) label.textContent = 'Disconnected';
-  }
-}
-
+// Single Action Common Workspace Router Trigger 
 startSessionBtn.addEventListener('click', async () => {
   landingPage.style.display = 'none';
   const name = "Doctor";
@@ -681,17 +727,17 @@ startSessionBtn.addEventListener('click', async () => {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: true }); 
     } else {
-      throw new Error('Hardware layer block');
+      throw new Error('Sandbox context lock error');
     }
   } catch (e) { 
-    console.warn('Simulated hardware fallback.'); 
+    console.warn('Hardware pipeline stream simulation active.'); 
   }
 
   document.body.classList.add('joined');
   statusText.textContent = name + " (Live)";
 
   const localObj = createParticipantTile(name, 'local', stream);
-  const remoteObj = createParticipantTile('Consulting Peer', 'remote', null);
+  remoteObj = createParticipantTile('Consulting Peer', 'remote', null);
 
   remoteObj.tile.classList.add('maximized');
   localObj.tile.classList.add('minimized');
@@ -709,7 +755,11 @@ startSessionBtn.addEventListener('click', async () => {
   videoGrid.appendChild(remoteObj.tile); 
   videoGrid.appendChild(localObj.tile);
   
-  initializePeerConnection('telehealth-shared-common-room', stream, remoteObj);
+  if (stream) {
+    initializePeerConnection('telehealth-shared-common-room');
+  } else {
+    showCustomAlert("Media streams required to sync with remote pipeline peers.");
+  }
 });
 
 micBtn.addEventListener('click', () => { if(!stream) return; micOn = !micOn; stream.getAudioTracks().forEach(t => t.enabled = micOn); micBtn.classList.toggle('off', !micOn); });
@@ -744,15 +794,16 @@ tabChatBtn.addEventListener('click', openChatTab);
 tabRxBtn.addEventListener('click', openRxTab);
 
 hangBtn.addEventListener('click', () => {
+  if (stream) stream.getTracks().forEach(t => t.stop());
   if (currentCall) currentCall.close();
   if (peer) peer.destroy();
-  if (stream) stream.getTracks().forEach(t => t.stop());
   document.body.classList.remove('joined');
   statusText.textContent = 'Disconnected'; videoGrid.innerHTML = '';
   showCustomAlert("Session terminated.");
   landingPage.style.display = 'flex';
 });
 
+// Chat Attachments Processing
 const photoInput = document.getElementById('photoInput');
 const triggerFileBtn = document.getElementById('triggerFileBtn');
 const uploadPreviewBar = document.getElementById('uploadPreviewBar');
@@ -829,6 +880,7 @@ document.getElementById('printImageBtn').addEventListener('click', () => {
   win.close();
 });
 
+// Medication Added Multi-Group Row Manager
 let medCount = 1;
 document.getElementById('addMedBtn').addEventListener('click', () => {
   medCount++;
@@ -856,6 +908,7 @@ document.getElementById('addMedBtn').addEventListener('click', () => {
   document.getElementById('rxMedsContainer').appendChild(group);
 });
 
+// Prescription Management Formatting Logic
 function getRxData() {
   const medGroups = document.querySelectorAll('.med-group');
   const medsList = [];
@@ -935,7 +988,7 @@ function printPrescriptionData(data) {
       <hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;">
       <h3>Medications:</h3>
       <ul>${medsLines}</ul>
-      ` + (data.notes ? '<hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;"><h3>Notes / Directions:</h3><p>' + data.notes + '</p>' : '') + `
+      \${data.notes ? '<hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;"><h3>Notes / Directions:</h3><p>' + data.notes + '</p>' : ''}
       <br><br><br>
       <p style="border-top:1px solid #cbd5e1; display:inline-block; padding-top:5px; width:200px;">Authorized Electronic Signature</p>
       <script>window.onload = function() { window.print(); window.close(); }</s` + `cript>
