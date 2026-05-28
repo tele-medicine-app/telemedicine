@@ -5,7 +5,7 @@ let activeConn = null;
 let peer = null;
 let myPeerId = null;
 let targetPeerId = null;
-let currentAttachmentData = null; // Holds base64 encoded attached images
+let currentAttachmentData = null; 
 
 // DOM Element Registry
 const landingPage = document.getElementById('landingPage');
@@ -54,20 +54,6 @@ const customConfirmText = document.getElementById('customConfirmText');
 const customConfirmCancelBtn = document.getElementById('customConfirmCancelBtn');
 const customConfirmOkBtn = document.getElementById('customConfirmOkBtn');
 
-// Defensive Base Structural UI Layer Enforcement
-if (videoGrid) {
-  videoGrid.style.display = 'grid';
-  videoGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
-  videoGrid.style.gap = '16px';
-  videoGrid.style.width = '100%';
-  videoGrid.style.height = '100%';
-  videoGrid.style.maxHeight = 'calc(100vh - 180px)';
-  videoGrid.style.alignContent = 'center';
-  videoGrid.style.justifyContent = 'center';
-  videoGrid.style.overflow = 'hidden';
-  videoGrid.style.boxSizing = 'border-box';
-}
-
 // --------------------------------------------------------
 // Custom Dialog & Alert Utilities
 // --------------------------------------------------------
@@ -101,15 +87,13 @@ function showConfirm(message, onConfirm) {
 }
 
 // --------------------------------------------------------
-// Navigation, Sidebar, and Tab Control UI
+// Navigation & Sidebar Controls
 // --------------------------------------------------------
 chatBtn.addEventListener('click', () => {
   document.body.classList.toggle('chat-open');
-  setTimeout(recalculateLayoutBounds, 150);
 });
 closeChatBtn.addEventListener('click', () => {
   document.body.classList.remove('chat-open');
-  setTimeout(recalculateLayoutBounds, 150);
 });
 
 tabChatBtn.addEventListener('click', () => {
@@ -126,20 +110,16 @@ tabRxBtn.addEventListener('click', () => {
   viewChat.classList.remove('active');
 });
 
-// Dynamic Medication Rows for Rx Builder
 let medCount = 1;
 addMedBtn.addEventListener('click', () => {
   medCount++;
   const medGroup = document.createElement('div');
   medGroup.classList.add('med-group');
-  medGroup.style.marginTop = '15px';
-  medGroup.style.borderTop = '1px dashed #e2e8f0';
-  medGroup.style.paddingTop = '15px';
   
   medGroup.innerHTML = `
-    <div class="med-row-header" style="display:flex; justify-content:space-between; align-items:center;">
-      <label style="font-size: 11px; font-weight: 700; color: var(--meet-green-dark); text-transform: uppercase; letter-spacing: 0.5px;">Medication #${medCount}</label>
-      <button type="button" class="btn-remove-med" style="background:none; border:none; color:#e53e3e; font-size:12px; cursor:pointer;">Remove</button>
+    <div class="med-row-header">
+      <label>Medication #${medCount}</label>
+      <button type="button" class="btn-remove-med">Remove</button>
     </div>
     <div class="rx-field">
       <label>Medication Name</label>
@@ -155,22 +135,20 @@ addMedBtn.addEventListener('click', () => {
     </div>
   `;
   
-  medGroup.querySelector('.btn-remove-med').addEventListener('click', () => {
-    medGroup.remove();
-  });
+  medGroup.querySelector('.btn-remove-med').addEventListener('click', () => medGroup.remove());
   rxMedsContainer.appendChild(medGroup);
 });
 
 // --------------------------------------------------------
-// Main Initialization Routine
+// Media Initialization
 // --------------------------------------------------------
 startSessionBtn.addEventListener('click', async () => {
   landingPage.style.display = 'none';
-  statusText.textContent = 'Connecting to AV hardware...';
+  statusText.textContent = 'Connecting to camera/mic...';
   
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ 
-      video: { width: { ideal: 1280 }, height: { ideal: 720 } }, 
+      video: true, 
       audio: true 
     });
     displayLocalStream(localStream);
@@ -178,43 +156,9 @@ startSessionBtn.addEventListener('click', async () => {
   } catch (err) {
     console.error(err);
     statusText.textContent = 'Hardware access blocked';
-    showAlert('Could not initialize video/audio hardware. Please verify system permissions.');
+    showAlert('Could not initialize video/audio hardware.');
   }
 });
-
-function applyResponsiveVideoStyles(container, video) {
-  container.style.position = 'relative';
-  container.style.width = '100%';
-  container.style.height = '100%';
-  container.style.aspectRatio = '16/9';
-  container.style.backgroundColor = '#1a202c';
-  container.style.borderRadius = '12px';
-  container.style.overflow = 'hidden';
-  container.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.3)';
-  container.style.display = 'flex';
-  container.style.alignItems = 'center';
-  container.style.justifyContent = 'center';
-
-  video.style.width = '100%';
-  video.style.height = '100%';
-  video.style.objectFit = 'cover';
-  video.style.display = 'block';
-}
-
-function recalculateLayoutBounds() {
-  const elements = videoGrid.querySelectorAll('.video-wrapper');
-  if (elements.length === 1) {
-    videoGrid.style.gridTemplateColumns = '1fr';
-    elements[0].style.maxWidth = '720px';
-    elements[0].style.margin = '0 auto';
-  } else if (elements.length >= 2) {
-    videoGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
-    elements.forEach(el => {
-      el.style.maxWidth = '100%';
-      el.style.margin = '0';
-    });
-  }
-}
 
 function displayLocalStream(stream) {
   if (document.getElementById('localVideoContainer')) return;
@@ -233,107 +177,70 @@ function displayLocalStream(stream) {
   badge.className = 'video-label';
   badge.textContent = 'You (Local)';
   
-  applyResponsiveVideoStyles(container, video);
   container.appendChild(video);
   container.appendChild(badge);
   videoGrid.appendChild(container);
-  recalculateLayoutBounds();
 }
 
 // --------------------------------------------------------
-// Core Signaling & Network Configuration (Pipeline Fix)
+// Original Local Server PeerJS Configuration
 // --------------------------------------------------------
 function initializePeer() {
-  statusText.textContent = 'Synchronizing secure server pipeline...';
+  statusText.textContent = 'Connecting to local server...';
   
   const hash = window.location.hash.replace('#', '');
-  
-  // Isolate room namespaces dynamically to prevent dual-host ID collisions
   if (hash === 'host' || !hash) {
-    myPeerId = 'telehealth-session-host-secured';
-    targetPeerId = 'telehealth-session-client-secured';
+    myPeerId = 'host';
+    targetPeerId = 'client';
     if (!hash) window.location.hash = 'host';
   } else {
-    myPeerId = 'telehealth-session-client-secured';
-    targetPeerId = 'telehealth-session-host-secured';
+    myPeerId = 'client';
+    targetPeerId = 'host';
   }
 
-  // ULTRA FIX: Formulate network connection parameters precisely
-  const config = {
+  // Reverted to your original local port and path settings
+  peer = new Peer(myPeerId, {
     host: window.location.hostname,
-    path: '/peerjs',
-    debug: 1
-  };
-
-  if (window.location.port && window.location.port !== '') {
-    config.port = parseInt(window.location.port, 10);
-  } else {
-    config.secure = window.location.protocol === 'https:';
-  }
-
-  peer = new Peer(myPeerId, config);
+    port: window.location.port || 3000,
+    path: '/peerjs'
+  });
 
   peer.on('open', (id) => {
-    console.log('Secure channel allocated ID:', id);
-    statusText.textContent = 'Ready. Awaiting remote provider connection...';
+    statusText.textContent = 'Ready. Awaiting connection...';
     document.querySelector('.connection .dot').style.backgroundColor = '#ecc94b';
     
-    if (myPeerId === 'telehealth-session-client-secured') {
-      establishSecurePipeline();
+    if (myPeerId === 'client') {
+      connectToPeer();
     }
   });
 
   peer.on('connection', (conn) => {
-    console.log('Inbound secure text pipeline open requested by peer.');
     activeConn = conn;
-    bindDataPipelineEvents(activeConn);
+    bindDataEvents(activeConn);
   });
 
   peer.on('call', (call) => {
-    console.log('Inbound encrypted AV stream requested.');
     currentCall = call;
     call.answer(localStream);
-    
-    call.on('stream', (remoteStream) => {
-      displayRemoteStream(remoteStream);
-    });
-    
-    call.on('close', () => {
-      removeRemoteVideo();
-    });
+    call.on('stream', (remoteStream) => displayRemoteStream(remoteStream));
+    call.on('close', () => removeRemoteVideo());
   });
 
   peer.on('error', (err) => {
-    console.error('Peer pipeline exception:', err);
-    if (err.type === 'peer-not-found') {
-      statusText.textContent = 'Target line offline. Retrying...';
-      setTimeout(() => {
-        if (myPeerId === 'telehealth-session-client-secured' && (!activeConn || !activeConn.open)) {
-          establishSecurePipeline();
-        }
-      }, 3000);
-    } else if (err.type === 'unavailable-id') {
-      statusText.textContent = 'Pipeline collision error';
-      showAlert('Pipeline Error: This workspace channel profile ID is already in use by another browser window.');
-    } else {
-      statusText.textContent = 'Pipeline error: ' + err.type;
-    }
+    console.error('PeerJS Error:', err);
+    statusText.textContent = 'Error: ' + err.type;
   });
 }
 
-function establishSecurePipeline() {
-  statusText.textContent = 'Connecting to workspace...';
+function connectToPeer() {
+  statusText.textContent = 'Connecting to peer...';
   
   activeConn = peer.connect(targetPeerId, { reliable: true });
-  bindDataPipelineEvents(activeConn);
+  bindDataEvents(activeConn);
   
   currentCall = peer.call(targetPeerId, localStream);
-  currentCall.on('stream', (remoteStream) => {
-    displayRemoteStream(remoteStream);
-  });
-  currentCall.on('close', () => {
-    removeRemoteVideo();
-  });
+  currentCall.on('stream', (remoteStream) => displayRemoteStream(remoteStream));
+  currentCall.on('close', () => removeRemoteVideo());
 }
 
 function displayRemoteStream(stream) {
@@ -352,52 +259,42 @@ function displayRemoteStream(stream) {
   badge.className = 'video-label';
   badge.textContent = 'Remote Participant';
   
-  applyResponsiveVideoStyles(container, video);
   container.appendChild(video);
   container.appendChild(badge);
   videoGrid.appendChild(container);
   
-  recalculateLayoutBounds();
-  statusText.textContent = 'Pipeline Active (Encrypted)';
+  statusText.textContent = 'Connected';
   document.querySelector('.connection .dot').style.backgroundColor = 'var(--meet-green-primary)';
 }
 
 function removeRemoteVideo() {
   const remoteVideo = document.getElementById('remoteVideoContainer');
   if (remoteVideo) remoteVideo.remove();
-  recalculateLayoutBounds();
-  statusText.textContent = 'Remote participant disconnected';
+  statusText.textContent = 'Disconnected';
   document.querySelector('.connection .dot').style.backgroundColor = '#e53e3e';
 }
 
-function bindDataPipelineEvents(conn) {
+function bindDataEvents(conn) {
   conn.on('open', () => {
-    console.log('Secure bidirectional text pipeline verified.');
-    statusText.textContent = 'Pipeline Active (Encrypted)';
+    statusText.textContent = 'Connected';
     document.querySelector('.connection .dot').style.backgroundColor = 'var(--meet-green-primary)';
   });
 
   conn.on('data', (data) => {
-    console.log('Encrypted packet payload received:', data);
-    if (data && (data.text || data.image || data.type === 'prescription')) {
+    if (data) {
       appendMessage('remote', data);
     }
   });
 
   conn.on('close', () => {
-    console.warn('Secure data channel connection dropped by peer.');
     activeConn = null;
-    statusText.textContent = 'Data tunnel connection lost';
+    statusText.textContent = 'Connection closed';
     document.querySelector('.connection .dot').style.backgroundColor = '#ecc94b';
-  });
-  
-  conn.on('error', (err) => {
-    console.error('Data tunnel channel runtime exception:', err);
   });
 }
 
 // --------------------------------------------------------
-// Messaging Pipeline & Renderer Logic
+// Messaging & Chat
 // --------------------------------------------------------
 chatForm.addEventListener('submit', (e) => {
   e.preventDefault();
@@ -412,16 +309,10 @@ chatForm.addEventListener('submit', (e) => {
     image: currentAttachmentData || null
   };
 
-  if (!activeConn || !activeConn.open) {
-    showAlert('Message delivery failed: Safe channel connection is offline. Restoring pipeline...');
-    if (myPeerId === 'telehealth-session-client-secured') {
-      establishSecurePipeline();
-    }
-    return;
+  if (activeConn && activeConn.open) {
+    activeConn.send(payload);
+    appendMessage('local', payload);
   }
-
-  activeConn.send(payload);
-  appendMessage('local', payload);
   
   chatInput.value = '';
   clearImageAttachment();
@@ -435,21 +326,15 @@ function appendMessage(origin, payload) {
     msgBlock.classList.add('rx-payload-card');
     let medsHtml = '';
     payload.medications.forEach(m => {
-      medsHtml += `<div style="margin-top:6px; font-size:12px; background:#f7fafc; padding:6px; border-left:3px solid var(--meet-green-primary);">
-        <strong>${escapeHtml(m.name)}</strong> - ${escapeHtml(m.dosage)}<br>
-        <span style="font-size:11px; color:#4a5568;">${escapeHtml(m.frequency)}</span>
-      </div>`;
+      medsHtml += `<div><strong>${escapeHtml(m.name)}</strong> - ${escapeHtml(m.dosage)}<br>${escapeHtml(m.frequency)}</div>`;
     });
     
     msgBlock.innerHTML = `
-      <div style="display:flex; align-items:center; gap:8px; border-bottom:1px solid #edf2f7; padding-bottom:6px; margin-bottom:6px;">
-        <span style="font-size:18px; color:var(--meet-green-primary)">℞</span>
-        <strong style="font-size:13px; color:var(--meet-green-dark)">Official Digital Prescription</strong>
-      </div>
-      <div style="font-size:12px; margin-bottom:4px;"><strong>Patient:</strong> ${escapeHtml(payload.patient)}</div>
+      <div><strong>Prescription</strong></div>
+      <div>Patient: ${escapeHtml(payload.patient)}</div>
       ${medsHtml}
-      ${payload.notes ? `<div style="margin-top:8px; font-size:11px; font-style:italic; color:#718096; border-top:1px dashed #edf2f7; paddingTop:6px;">Notes: ${escapeHtml(payload.notes)}</div>` : ''}
-      <div style="text-align:right; font-size:9px; opacity:0.6; margin-top:6px;">${payload.timestamp}</div>
+      ${payload.notes ? `<div>Notes: ${escapeHtml(payload.notes)}</div>` : ''}
+      <div class="time">${payload.timestamp}</div>
     `;
     messagesContainer.appendChild(msgBlock);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -458,13 +343,13 @@ function appendMessage(origin, payload) {
 
   let content = '';
   if (payload.image) {
-    content += `<img src="${payload.image}" class="chat-embedded-img" style="max-width:100%; border-radius:8px; margin-bottom:4px; cursor:pointer;" onclick="launchLightbox('${payload.image}')" alt="Shared Media">`;
+    content += `<img src="${payload.image}" class="chat-embedded-img" onclick="launchLightbox('${payload.image}')">`;
   }
   if (payload.text) {
-    content += `<p style="margin:0; word-break:break-word;">${escapeHtml(payload.text)}</p>`;
+    content += `<p>${escapeHtml(payload.text)}</p>`;
   }
   
-  content += `<span class="time" style="display:block; text-align:right; font-size:9px; opacity:0.6; margin-top:2px;">${payload.timestamp}</span>`;
+  content += `<span class="time">${payload.timestamp}</span>`;
   msgBlock.innerHTML = content;
   
   messagesContainer.appendChild(msgBlock);
@@ -477,18 +362,13 @@ function escapeHtml(str) {
 }
 
 // --------------------------------------------------------
-// Media File Buffer Handling & Attachments Pipeline
+// File Attachments
 // --------------------------------------------------------
 triggerFileBtn.addEventListener('click', () => photoInput.click());
 
 photoInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
-
-  if (!file.type.startsWith('image/')) {
-    showAlert('Format blocked: Only active image file types can be shared over clinical sessions.');
-    return;
-  }
 
   const reader = new FileReader();
   reader.onload = (event) => {
@@ -509,37 +389,25 @@ function clearImageAttachment() {
 }
 
 // --------------------------------------------------------
-// Clinical Rx Form Actions & Verification Pipelines
+// Prescription Submission
 // --------------------------------------------------------
 sendChatRxBtn.addEventListener('click', () => {
   const patientName = rxPatient.value.trim();
-  if (!patientName) {
-    showAlert('Validation Failed: A valid Patient Name registry value is mandatory.');
-    return;
-  }
+  if (!patientName) return;
 
   const compiledMedications = [];
   const medRows = rxMedsContainer.querySelectorAll('.med-group');
-  let validMeds = true;
 
   medRows.forEach(row => {
     const name = row.querySelector('.rx-med-name').value.trim();
     const dosage = row.querySelector('.rx-med-dosage').value.trim();
     const frequency = row.querySelector('.rx-med-freq').value.trim();
-
-    if (!name || !dosage || !frequency) {
-      validMeds = false;
-      return;
+    if (name && dosage && frequency) {
+      compiledMedications.push({ name, dosage, frequency });
     }
-    compiledMedications.push({ name, dosage, frequency });
   });
 
-  if (!validMeds || compiledMedications.length === 0) {
-    showAlert('Validation Failed: All dynamic fields inside open Medication Rows must be fully populated.');
-    return;
-  }
-
-  showConfirm('Verify transmission: Submit generated prescription sheet directly into current secure conversation channel?', () => {
+  showConfirm('Submit prescription?', () => {
     const rxPayload = {
       type: 'prescription',
       sender: myPeerId,
@@ -552,43 +420,16 @@ sendChatRxBtn.addEventListener('click', () => {
     if (activeConn && activeConn.open) {
       activeConn.send(rxPayload);
       appendMessage('local', rxPayload);
-      
-      rxPatient.value = '';
-      rxNotes.value = '';
-      rxMedsContainer.innerHTML = `
-        <div class="med-group">
-          <div class="med-row-header">
-            <label style="font-size: 11px; font-weight: 700; color: var(--meet-green-dark); text-transform: uppercase; letter-spacing: 0.5px;">Medication #1</label>
-          </div>
-          <div class="rx-field">
-            <label>Medication Name</label>
-            <input type="text" class="rx-input rx-med-name" placeholder="e.g. Amoxicillin">
-          </div>
-          <div class="rx-field">
-            <label>Dosage strength</label>
-            <input type="text" class="rx-input rx-med-dosage" placeholder="e.g. 500mg">
-          </div>
-          <div class="rx-field">
-            <label>Frequency & Duration</label>
-            <input type="text" class="rx-input rx-med-freq" placeholder="e.g. 1 Tablet twice daily for 5 days">
-          </div>
-        </div>
-      `;
-      medCount = 1;
       tabChatBtn.click(); 
-    } else {
-      showAlert('Transmission failed: Network pipe context offline.');
     }
   });
 });
 
-directPrintRxBtn.addEventListener('click', () => {
-  window.print();
-});
+directPrintRxBtn.addEventListener('click', () => window.print());
 
 // --------------------------------------------------------
-// Lightbox Expansion UI Engine
-// --------------------------------------------------------
+// Lightbox Expansion UI
+// ------------------------
 window.launchLightbox = function(sourceUri) {
   lightboxImg.src = sourceUri;
   lightboxOverlay.classList.add('active');
@@ -601,7 +442,7 @@ closeLightboxBtn.addEventListener('click', () => {
 
 printImageBtn.addEventListener('click', () => {
   const printWindow = window.open('', '_blank');
-  printWindow.document.write(`<html><body style="margin:0; display:flex; justify-content:center; align-items:center; height:100vh;"><img src="${lightboxImg.src}" style="max-width:100%; max-height:100%; object-fit:contain;"></body></html>`);
+  printWindow.document.write(`<html><body><img src="${lightboxImg.src}" style="max-width:100%;"></body></html>`);
   printWindow.document.close();
   printWindow.focus();
   printWindow.onload = function() {
@@ -611,7 +452,7 @@ printImageBtn.addEventListener('click', () => {
 });
 
 // --------------------------------------------------------
-// Call Session Hardware Control Handlers
+// Hardware Toggles & Call Termination
 // --------------------------------------------------------
 micBtn.addEventListener('click', () => {
   if (!localStream) return;
@@ -619,7 +460,6 @@ micBtn.addEventListener('click', () => {
   if (audioTrack) {
     audioTrack.enabled = !audioTrack.enabled;
     micBtn.classList.toggle('disabled', !audioTrack.enabled);
-    micBtn.setAttribute('aria-label', audioTrack.enabled ? 'Mute' : 'Unmute');
   }
 });
 
@@ -629,12 +469,11 @@ camBtn.addEventListener('click', () => {
   if (videoTrack) {
     videoTrack.enabled = !videoTrack.enabled;
     camBtn.classList.toggle('disabled', !videoTrack.enabled);
-    camBtn.setAttribute('aria-label', videoTrack.enabled ? 'Camera Off' : 'Camera On');
   }
 });
 
 hangBtn.addEventListener('click', () => {
-  showConfirm('Are you sure you want to disconnect and exit this clinical sandbox session?', () => {
+  showConfirm('Disconnect session?', () => {
     if (currentCall) currentCall.close();
     if (activeConn) activeConn.close();
     if (localStream) {
@@ -643,6 +482,3 @@ hangBtn.addEventListener('click', () => {
     window.location.reload();
   });
 });
-
-// Bind window resizing matrix update
-window.addEventListener('resize', recalculateLayoutBounds);
