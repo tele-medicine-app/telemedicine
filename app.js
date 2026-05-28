@@ -54,6 +54,20 @@ const customConfirmText = document.getElementById('customConfirmText');
 const customConfirmCancelBtn = document.getElementById('customConfirmCancelBtn');
 const customConfirmOkBtn = document.getElementById('customConfirmOkBtn');
 
+// Defensive Base Structural UI Layer Enforcement
+if (videoGrid) {
+  videoGrid.style.display = 'grid';
+  videoGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+  videoGrid.style.gap = '16px';
+  videoGrid.style.width = '100%';
+  videoGrid.style.height = '100%';
+  videoGrid.style.maxHeight = 'calc(100vh - 180px)';
+  videoGrid.style.alignContent = 'center';
+  videoGrid.style.justifyContent = 'center';
+  videoGrid.style.overflow = 'hidden';
+  videoGrid.style.boxSizing = 'border-box';
+}
+
 // --------------------------------------------------------
 // Custom Dialog & Alert Utilities
 // --------------------------------------------------------
@@ -91,9 +105,11 @@ function showConfirm(message, onConfirm) {
 // --------------------------------------------------------
 chatBtn.addEventListener('click', () => {
   document.body.classList.toggle('chat-open');
+  setTimeout(recalculateLayoutBounds, 150);
 });
 closeChatBtn.addEventListener('click', () => {
   document.body.classList.remove('chat-open');
+  setTimeout(recalculateLayoutBounds, 150);
 });
 
 tabChatBtn.addEventListener('click', () => {
@@ -153,7 +169,10 @@ startSessionBtn.addEventListener('click', async () => {
   statusText.textContent = 'Connecting to AV hardware...';
   
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    localStream = await navigator.mediaDevices.getUserMedia({ 
+      video: { width: { ideal: 1280 }, height: { ideal: 720 } }, 
+      audio: true 
+    });
     displayLocalStream(localStream);
     initializePeer();
   } catch (err) {
@@ -162,6 +181,40 @@ startSessionBtn.addEventListener('click', async () => {
     showAlert('Could not initialize video/audio hardware. Please verify system permissions.');
   }
 });
+
+function applyResponsiveVideoStyles(container, video) {
+  container.style.position = 'relative';
+  container.style.width = '100%';
+  container.style.height = '100%';
+  container.style.aspectRatio = '16/9';
+  container.style.backgroundColor = '#1a202c';
+  container.style.borderRadius = '12px';
+  container.style.overflow = 'hidden';
+  container.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.3)';
+  container.style.display = 'flex';
+  container.style.alignItems = 'center';
+  container.style.justifyContent = 'center';
+
+  video.style.width = '100%';
+  video.style.height = '100%';
+  video.style.objectFit = 'cover';
+  video.style.display = 'block';
+}
+
+function recalculateLayoutBounds() {
+  const elements = videoGrid.querySelectorAll('.video-wrapper');
+  if (elements.length === 1) {
+    videoGrid.style.gridTemplateColumns = '1fr';
+    elements[0].style.maxWidth = '720px';
+    elements[0].style.margin = '0 auto';
+  } else if (elements.length >= 2) {
+    videoGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+    elements.forEach(el => {
+      el.style.maxWidth = '100%';
+      el.style.margin = '0';
+    });
+  }
+}
 
 function displayLocalStream(stream) {
   if (document.getElementById('localVideoContainer')) return;
@@ -180,20 +233,22 @@ function displayLocalStream(stream) {
   badge.className = 'video-label';
   badge.textContent = 'You (Local)';
   
+  applyResponsiveVideoStyles(container, video);
   container.appendChild(video);
   container.appendChild(badge);
   videoGrid.appendChild(container);
+  recalculateLayoutBounds();
 }
 
 // --------------------------------------------------------
-// Core Signaling & Network Configuration
+// Core Signaling & Network Configuration (Pipeline Fix)
 // --------------------------------------------------------
 function initializePeer() {
   statusText.textContent = 'Synchronizing secure server pipeline...';
   
-  // URL Hash routing setup: checks if explicit channel room is set
   const hash = window.location.hash.replace('#', '');
   
+  // Isolate room namespaces dynamically to prevent dual-host ID collisions
   if (hash === 'host' || !hash) {
     myPeerId = 'telehealth-session-host-secured';
     targetPeerId = 'telehealth-session-client-secured';
@@ -203,33 +258,37 @@ function initializePeer() {
     targetPeerId = 'telehealth-session-host-secured';
   }
 
-  // Connects directly to localized or configured broker stack
-  peer = new Peer(myPeerId, {
+  // ULTRA FIX: Formulate network connection parameters precisely
+  const config = {
     host: window.location.hostname,
-    port: window.location.port || (window.location.protocol === 'https:' ? 443 : 80),
     path: '/peerjs',
     debug: 1
-  });
+  };
+
+  if (window.location.port && window.location.port !== '') {
+    config.port = parseInt(window.location.port, 10);
+  } else {
+    config.secure = window.location.protocol === 'https:';
+  }
+
+  peer = new Peer(myPeerId, config);
 
   peer.on('open', (id) => {
     console.log('Secure channel allocated ID:', id);
     statusText.textContent = 'Ready. Awaiting remote provider connection...';
     document.querySelector('.connection .dot').style.backgroundColor = '#ecc94b';
     
-    // Client initiates synchronization pipeline immediately
     if (myPeerId === 'telehealth-session-client-secured') {
       establishSecurePipeline();
     }
   });
 
-  // CRITICAL FIX: Remote Data Listener for incoming message pipelines
   peer.on('connection', (conn) => {
     console.log('Inbound secure text pipeline open requested by peer.');
     activeConn = conn;
     bindDataPipelineEvents(activeConn);
   });
 
-  // Remote Audio/Video Streaming Request Interceptor
   peer.on('call', (call) => {
     console.log('Inbound encrypted AV stream requested.');
     currentCall = call;
@@ -249,23 +308,25 @@ function initializePeer() {
     if (err.type === 'peer-not-found') {
       statusText.textContent = 'Target line offline. Retrying...';
       setTimeout(() => {
-        if (myPeerId === 'telehealth-session-client-secured') establishSecurePipeline();
+        if (myPeerId === 'telehealth-session-client-secured' && (!activeConn || !activeConn.open)) {
+          establishSecurePipeline();
+        }
       }, 3000);
+    } else if (err.type === 'unavailable-id') {
+      statusText.textContent = 'Pipeline collision error';
+      showAlert('Pipeline Error: This workspace channel profile ID is already in use by another browser window.');
     } else {
-      statusText.textContent = 'Pipeline error';
+      statusText.textContent = 'Pipeline error: ' + err.type;
     }
   });
 }
 
-// Client Handshake Initialization Wrapper
 function establishSecurePipeline() {
   statusText.textContent = 'Connecting to workspace...';
   
-  // Initialize the mandatory text data pipeline
   activeConn = peer.connect(targetPeerId, { reliable: true });
   bindDataPipelineEvents(activeConn);
   
-  // Initialize the parallel AV multi-media stream
   currentCall = peer.call(targetPeerId, localStream);
   currentCall.on('stream', (remoteStream) => {
     displayRemoteStream(remoteStream);
@@ -291,10 +352,12 @@ function displayRemoteStream(stream) {
   badge.className = 'video-label';
   badge.textContent = 'Remote Participant';
   
+  applyResponsiveVideoStyles(container, video);
   container.appendChild(video);
   container.appendChild(badge);
   videoGrid.appendChild(container);
   
+  recalculateLayoutBounds();
   statusText.textContent = 'Pipeline Active (Encrypted)';
   document.querySelector('.connection .dot').style.backgroundColor = 'var(--meet-green-primary)';
 }
@@ -302,13 +365,11 @@ function displayRemoteStream(stream) {
 function removeRemoteVideo() {
   const remoteVideo = document.getElementById('remoteVideoContainer');
   if (remoteVideo) remoteVideo.remove();
+  recalculateLayoutBounds();
   statusText.textContent = 'Remote participant disconnected';
   document.querySelector('.connection .dot').style.backgroundColor = '#e53e3e';
 }
 
-// --------------------------------------------------------
-// CRITICAL CORRECTION: Bidirectional Data Stream Binder
-// --------------------------------------------------------
 function bindDataPipelineEvents(conn) {
   conn.on('open', () => {
     console.log('Secure bidirectional text pipeline verified.');
@@ -316,9 +377,8 @@ function bindDataPipelineEvents(conn) {
     document.querySelector('.connection .dot').style.backgroundColor = 'var(--meet-green-primary)';
   });
 
-  // EXPLICIT SYSTEM CORRECTION: Listen for and render incoming text/image blocks
   conn.on('data', (data) => {
-    console.log('Encrypted packet payload payload received:', data);
+    console.log('Encrypted packet payload received:', data);
     if (data && (data.text || data.image || data.type === 'prescription')) {
       appendMessage('remote', data);
     }
@@ -352,22 +412,17 @@ chatForm.addEventListener('submit', (e) => {
     image: currentAttachmentData || null
   };
 
-  // Fail-safe state interception if user attempts transmission over dead connection
   if (!activeConn || !activeConn.open) {
-    showAlert('Message delivery failed: Safe channel connection is offline. Attempting pipeline restoration...');
+    showAlert('Message delivery failed: Safe channel connection is offline. Restoring pipeline...');
     if (myPeerId === 'telehealth-session-client-secured') {
       establishSecurePipeline();
     }
     return;
   }
 
-  // Synchronous network dispatch across Data Channel
   activeConn.send(payload);
-  
-  // Render message natively inside local window frame
   appendMessage('local', payload);
   
-  // Clean UI input area buffers
   chatInput.value = '';
   clearImageAttachment();
 });
@@ -376,7 +431,6 @@ function appendMessage(origin, payload) {
   const msgBlock = document.createElement('div');
   msgBlock.className = `msg ${origin === 'local' ? 'sent' : 'received'}`;
   
-  // Context Renderer for Prescription payloads
   if (payload.type === 'prescription') {
     msgBlock.classList.add('rx-payload-card');
     let medsHtml = '';
@@ -402,7 +456,6 @@ function appendMessage(origin, payload) {
     return;
   }
 
-  // Renderer Context for typical Text & File attachments
   let content = '';
   if (payload.image) {
     content += `<img src="${payload.image}" class="chat-embedded-img" style="max-width:100%; border-radius:8px; margin-bottom:4px; cursor:pointer;" onclick="launchLightbox('${payload.image}')" alt="Shared Media">`;
@@ -500,7 +553,6 @@ sendChatRxBtn.addEventListener('click', () => {
       activeConn.send(rxPayload);
       appendMessage('local', rxPayload);
       
-      // Reset Clinical Script Panel Inputs
       rxPatient.value = '';
       rxNotes.value = '';
       rxMedsContainer.innerHTML = `
@@ -523,7 +575,7 @@ sendChatRxBtn.addEventListener('click', () => {
         </div>
       `;
       medCount = 1;
-      tabChatBtn.click(); // Automatically shift viewport back to raw messages line
+      tabChatBtn.click(); 
     } else {
       showAlert('Transmission failed: Network pipe context offline.');
     }
@@ -591,3 +643,6 @@ hangBtn.addEventListener('click', () => {
     window.location.reload();
   });
 });
+
+// Bind window resizing matrix update
+window.addEventListener('resize', recalculateLayoutBounds);
