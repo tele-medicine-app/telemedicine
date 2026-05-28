@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>Telemedicine Sync</title>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
 :root {
   --bg-app: #f1f5f9;       
@@ -539,9 +538,20 @@ const startSessionBtn = document.getElementById('startSessionBtn');
 const landingPage = document.getElementById('landingPage');
 
 let stream = null; let micOn = true; let camOn = true;
-let peer = null; let currentCall = null; let remoteObj = null;
+let socket = null; let pc = null; let remoteObj = null;
 
-// Mobile View Adjuster Engine
+const ROOM_ID = 'telehealth-room-1';
+// Detect production environment or fall back to native development addresses
+const SIGNAL_URL = window.location.location === 'https:' ? `wss://${window.location.host}` : 'ws://localhost:3000';
+
+const RTC_CONFIG = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun.cloudflare.com:3478' }
+  ]
+};
+
 function handleMobileViewHeight() {
   if (window.innerWidth <= 900) {
     if (!document.body.classList.contains('chat-collapsed') && window.visualViewport) {
@@ -559,14 +569,12 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('scroll', handleMobileViewHeight);
 }
 
-// Initial Mobile Load Workspace Visibility Layout Look
 if (window.innerWidth <= 900) {
   document.body.classList.add('chat-collapsed');
   document.body.classList.remove('chat-open');
   chatBtn.classList.remove('active-chat');
 }
 
-// Alerts / Confirm Logic
 let currentConfirmAction = null;
 
 function showCustomAlert(message) {
@@ -626,7 +634,7 @@ function createParticipantTile(name, type = 'remote', streamObject = null) {
   if (streamObject) {
     video.srcObject = streamObject;
     video.onloadedmetadata = () => { 
-      video.play(); 
+      video.play().catch(() => {}); 
       placeholder.style.display = 'none'; 
       if (type === 'remote') tile.querySelector('.info span').textContent = 'Connected';
     };
@@ -636,47 +644,107 @@ function createParticipantTile(name, type = 'remote', streamObject = null) {
   return { tile, video, placeholder };
 }
 
-// ─── PeerJS config with reliable STUN + free TURN (handles strict NAT/mobile) ──
-const PEER_CONFIG = {
-  debug: 0,
-  config: {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:stun.cloudflare.com:3478' },
-      {
-        urls: 'turn:openrelay.metered.ca:80',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      }
-    ]
-  }
-};
+// ─── Native WebRTC Integration Engines ───
+function initializeEngineConnection() {
+  socket = new WebSocket(SIGNAL_URL);
 
-function handleRemoteStream(remoteStream) {
-  console.log('REMOTE STREAM RECEIVED');
-  if (remoteObj && remoteObj.video) {
-    remoteObj.video.srcObject = remoteStream;
-    remoteObj.video.play().catch(() => {});
-    if (remoteObj.placeholder) remoteObj.placeholder.style.display = 'none';
-    const span = remoteObj.tile.querySelector('.info span');
-    if (span) span.textContent = 'Connected';
-    statusText.textContent = 'Connected (Live)';
-  }
+  socket.onopen = () => {
+    statusText.textContent = 'Joining channel...';
+    // Unique session ID token generation
+    const myId = Math.random().toString(36).substr(2, 9);
+    socket.send(JSON.stringify({ type: 'join', roomId: ROOM_ID, peerId: myId }));
+  };
+
+  socket.onmessage = async (message) => {
+    const data = JSON.parse(message.data);
+
+    switch (data.type) {
+      case 'peer-joined':
+        statusText.textContent = 'Connecting link...';
+        createPeerConnection();
+        // Initiator creates session proposal configuration offer
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket.send(JSON.stringify({ type: 'offer', offer, roomId: ROOM_ID }));
+        break;
+
+      case 'offer':
+        if (!pc) createPeerConnection();
+        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket.send(JSON.stringify({ type: 'answer', answer, roomId: ROOM_ID }));
+        break;
+
+      case 'answer':
+        if (pc) {
+          await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+        }
+        break;
+
+      case 'candidate':
+        if (pc) {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+          } catch (e) {
+            console.error('Candidate processing rejection:', e);
+          }
+        }
+        break;
+
+      case 'peer-left':
+        handleRemoteDisconnect();
+        break;
+    }
+  };
+
+  socket.onerror = () => {
+    statusText.textContent = 'Core Pipeline Error';
+  };
+
+  socket.onclose = () => {
+    statusText.textContent = 'Disconnected';
+  };
+}
+
+function createPeerConnection() {
+  if (pc) return;
+
+  pc = new RTCPeerConnection(RTC_CONFIG);
+
+  // Bind structural multi-media logic tracking pipelines
+  stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+  pc.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.send(JSON.stringify({ type: 'candidate', candidate: event.candidate, roomId: ROOM_ID }));
+    }
+  };
+
+  pc.ontrack = (event) => {
+    console.log('Remote data media feed acquired.');
+    if (remoteObj && remoteObj.video) {
+      remoteObj.video.srcObject = event.streams[0];
+      remoteObj.video.play().catch(() => {});
+      if (remoteObj.placeholder) remoteObj.placeholder.style.display = 'none';
+      const span = remoteObj.tile.querySelector('.info span');
+      if (span) span.textContent = 'Connected';
+      statusText.textContent = 'Connected (Live)';
+    }
+  };
+
+  pc.onconnectionstatechange = () => {
+    if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+      handleRemoteDisconnect();
+    }
+  };
 }
 
 function handleRemoteDisconnect() {
+  if (pc) {
+    pc.close();
+    pc = null;
+  }
   if (remoteObj && remoteObj.placeholder) {
     remoteObj.video.srcObject = null;
     remoteObj.placeholder.style.display = 'flex';
@@ -690,89 +758,12 @@ function handleRemoteDisconnect() {
   }
 }
 
-function setupCallHandlers(call) {
-  currentCall = call;
-  call.on('stream', handleRemoteStream);
-  call.on('close', handleRemoteDisconnect);
-  call.on('error', (err) => console.error('Call error:', err));
-}
-
-function connectAsGuest(roomId) {
-  console.log('GUEST MODE: room taken, will call host ID:', roomId);
-  if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
-
-  peer = new Peer(undefined, PEER_CONFIG);
-
-  peer.on('open', (myId) => {
-    console.log('Guest peer open, ID:', myId, '- calling host in 800ms');
-    statusText.textContent = 'Calling host...';
-    setTimeout(() => {
-      if (!stream) { showCustomAlert('No camera stream. Reload and allow camera access.'); return; }
-      const call = peer.call(roomId, stream);
-      if (!call) { showCustomAlert('Could not reach host. Make sure Device 1 joined first, then try again.'); return; }
-      setupCallHandlers(call);
-      console.log('Call placed to host:', roomId);
-    }, 800);
-  });
-
-  peer.on('error', (err) => {
-    console.error('GUEST error:', err.type, err.message);
-    if (err.type === 'network' || err.type === 'server-error') {
-      setTimeout(() => connectAsGuest(roomId), 3000);
-    } else {
-      showCustomAlert('Connection error: ' + err.type + '. Try reloading on both devices.');
-    }
-  });
-
-  peer.on('disconnected', () => { console.warn('Guest disconnected from broker, reconnecting'); peer.reconnect(); });
-}
-
-function initializePeerConnection(roomId) {
-  if (typeof Peer === 'undefined') { showCustomAlert('PeerJS failed to load. Check internet and reload.'); return; }
-  if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
-
-  console.log('HOST MODE: claiming peer ID:', roomId);
-  peer = new Peer(roomId, PEER_CONFIG);
-
-  peer.on('open', (id) => {
-    console.log('HOST peer open, ID:', id, '- waiting for guest...');
-    statusText.textContent = 'Waiting for guest...';
-
-    peer.on('call', (incomingCall) => {
-      console.log('INCOMING CALL - answering...');
-      if (!stream) { console.error('No stream to answer with'); return; }
-      incomingCall.answer(stream);
-      setupCallHandlers(incomingCall);
-    });
-  });
-
-  peer.on('error', (err) => {
-    if (err.type === 'unavailable-id' || err.type === 'id-taken') {
-      console.log('Host ID taken - switching to GUEST mode');
-      connectAsGuest(roomId);
-    } else if (err.type === 'network' || err.type === 'server-error') {
-      console.warn('Broker hiccup, retrying host in 3s:', err.type);
-      statusText.textContent = 'Connecting...';
-      setTimeout(() => initializePeerConnection(roomId), 3000);
-    } else {
-      console.error('HOST error:', err.type, err.message);
-      showCustomAlert('Connection error: ' + err.type + '. Reload the page on both devices and try again.');
-    }
-  });
-
-  peer.on('disconnected', () => { console.warn('Host disconnected from broker, reconnecting'); statusText.textContent = 'Reconnecting...'; peer.reconnect(); });
-}
-// ─── Join Workspace button ─────────────────────────────────────────────────────
-// IMPORTANT: Both devices MUST use the same ROOM_ID to find each other.
-// PeerJS free broker has a 50-char ID limit – keep it short and alphanumeric only.
-const ROOM_ID = 'telehealth-room-1'; // ← change this if you want a private room
-
+// ─── Control Bindings ───
 startSessionBtn.addEventListener('click', async () => {
   landingPage.style.display = 'none';
   videoGrid.innerHTML = '';
-  statusText.textContent = 'Requesting camera…';
+  statusText.textContent = 'Acquiring peripheral feeds…';
 
-  // 1. Get local media FIRST – before touching PeerJS
   try {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -780,16 +771,14 @@ startSessionBtn.addEventListener('click', async () => {
         audio: true
       });
     } else {
-      throw new Error('getUserMedia not supported in this browser/context.');
+      throw new Error('Device configuration layer missing permissions.');
     }
   } catch (e) {
-    console.warn('Could not get camera/mic:', e.message);
-    showCustomAlert('Could not access camera or microphone.\n\nMake sure you:\n• Allowed camera/mic permission\n• Are using HTTPS (not http://)\n• Are not in a browser that blocks WebRTC');
+    showCustomAlert('Could not access camera or microphone.\n\nVerify parameters context configuration requirements.');
     landingPage.style.display = 'flex';
-    return; // stop here – we NEED the stream to make WebRTC calls
+    return;
   }
 
-  // 2. Build the local video tile
   document.body.classList.add('joined');
   statusText.textContent = 'Connecting…';
 
@@ -816,8 +805,7 @@ startSessionBtn.addEventListener('click', async () => {
   videoGrid.appendChild(remoteObj.tile);
   videoGrid.appendChild(localObj.tile);
 
-  // 3. Now initialise PeerJS (stream is guaranteed non-null here)
-  initializePeerConnection(ROOM_ID);
+  initializeEngineConnection();
 });
 
 micBtn.addEventListener('click', () => { if(!stream) return; micOn = !micOn; stream.getAudioTracks().forEach(t => t.enabled = micOn); micBtn.classList.toggle('off', !micOn); });
@@ -853,15 +841,15 @@ tabRxBtn.addEventListener('click', openRxTab);
 
 hangBtn.addEventListener('click', () => {
   if (stream) stream.getTracks().forEach(t => t.stop());
-  if (currentCall) currentCall.close();
-  if (peer) peer.destroy();
+  if (pc) pc.close();
+  if (socket) socket.close();
   document.body.classList.remove('joined');
   statusText.textContent = 'Disconnected'; videoGrid.innerHTML = '';
-  showCustomAlert("Session terminated.");
+  showCustomAlert("Session terminated safely.");
   landingPage.style.display = 'flex';
 });
 
-// Chat Attachments Processing
+// Chat attachments processor mechanics
 const photoInput = document.getElementById('photoInput');
 const triggerFileBtn = document.getElementById('triggerFileBtn');
 const uploadPreviewBar = document.getElementById('uploadPreviewBar');
@@ -938,7 +926,6 @@ document.getElementById('printImageBtn').addEventListener('click', () => {
   win.close();
 });
 
-// Medication Added Multi-Group Row Manager
 let medCount = 1;
 document.getElementById('addMedBtn').addEventListener('click', () => {
   medCount++;
@@ -966,7 +953,6 @@ document.getElementById('addMedBtn').addEventListener('click', () => {
   document.getElementById('rxMedsContainer').appendChild(group);
 });
 
-// Prescription Management Formatting Logic
 function getRxData() {
   const medGroups = document.querySelectorAll('.med-group');
   const medsList = [];
@@ -1036,6 +1022,10 @@ function printPrescriptionData(data) {
   data.meds.forEach((m, i) => {
     medsLines += `<li><strong>${m.name}</strong> ${m.dosage} <br><small>${m.freq}</small></li>`;
   });
+  
+  // Dynamic parsing safe array wrapper injection
+  const notesField = data.notes ? `<h3>Notes / Directions:</h3><p>${data.notes}</p>` : '';
+
   win.document.write(`
     <html>
     <head><title>Prescription - ${data.patient}</title></head>
@@ -1046,10 +1036,13 @@ function printPrescriptionData(data) {
       <hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;">
       <h3>Medications:</h3>
       <ul>${medsLines}</ul>
-      \${data.notes ? '<hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;"><h3>Notes / Directions:</h3><p>' + data.notes + '</p>' : ''}
+      <hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;">
+      ${notesField}
       <br><br><br>
       <p style="border-top:1px solid #cbd5e1; display:inline-block; padding-top:5px; width:200px;">Authorized Electronic Signature</p>
-      <script>window.onload = function() { window.print(); window.close(); }</s` + `cript>
+      <script>
+        window.onload = function() { window.print(); setTimeout(() => { window.close(); }, 500); }
+      <\/script>
     </body>
     </html>
   `);
