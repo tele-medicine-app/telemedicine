@@ -636,16 +636,19 @@ function createParticipantTile(name, type = 'remote', streamObject = null) {
   return { tile, video, placeholder };
 }
 
-// Fixed Signaling Pipeline Engine
+// ─── Remote stream / disconnect helpers ───────────────────────────────────────
+
 function handleRemoteStream(remoteStream) {
-  console.log('Remote streaming handshake success. Rendering layout pipeline.');
+  console.log('Remote stream received – attaching to video tile.');
   if (remoteObj && remoteObj.video) {
     remoteObj.video.srcObject = remoteStream;
     remoteObj.video.onloadedmetadata = () => {
-      remoteObj.video.play();
+      remoteObj.video.play().catch(() => {});
       if (remoteObj.placeholder) remoteObj.placeholder.style.display = 'none';
       const span = remoteObj.tile.querySelector('.info span');
       if (span) span.textContent = 'Connected';
+      document.body.classList.add('joined');
+      statusText.textContent = 'Connected (Live)';
     };
   }
 }
@@ -663,80 +666,150 @@ function handleRemoteDisconnect() {
   }
 }
 
+// ─── Guest: connect to an already-claimed room ────────────────────────────────
+
 function connectAsGuest(roomId) {
-  peer = new Peer();
-  peer.on('open', (id) => {
-    console.log('Registered with sandbox client cluster nodes. Access ID:', id);
-    const call = peer.call(roomId, stream);
-    currentCall = call;
-    call.on('stream', (remoteStream) => {
-      handleRemoteStream(remoteStream);
-    });
-    call.on('close', () => {
-      handleRemoteDisconnect();
-    });
-  });
-  peer.on('error', (err) => {
-    console.error('Guest node synchronization exception:', err);
-  });
-}
+  console.log('Room is taken – joining as guest caller...');
 
-function initializePeerConnection(roomId) {
-  console.log("Initializing sync handshakes for common context ID:", roomId);
-  if (typeof Peer === 'undefined') {
-    showCustomAlert("Error: Signaling runtime library not found.");
-    return;
-  }
+  // Destroy any stale peer before creating a new one
+  if (peer) { try { peer.destroy(); } catch(e) {} }
 
-  // Attempt to claim primary node channel (Host)
-  peer = new Peer(roomId);
+  peer = new Peer(); // let PeerJS assign a random ID
 
   peer.on('open', (id) => {
-    console.log('Verified primary sandbox cluster channel host ID:', id);
-    // Listen for incoming call events from client pairs
-    peer.on('call', (call) => {
-      console.log('Incoming streaming invitation detected.');
+    console.log('Guest peer ID assigned:', id);
+
+    if (!stream) {
+      console.error('No local stream available – cannot call host.');
+      showCustomAlert('Camera/mic access is required to connect. Please allow permissions and try again.');
+      return;
+    }
+
+    // Small delay so the host side has time to finish registering its call handler
+    setTimeout(() => {
+      console.log('Calling host peer ID:', roomId);
+      const call = peer.call(roomId, stream);
+
+      if (!call) {
+        console.error('peer.call() returned null – host may not exist yet.');
+        showCustomAlert('Could not reach the host. Make sure the other device joined first, then try again.');
+        return;
+      }
+
       currentCall = call;
-      call.answer(stream);
+
       call.on('stream', (remoteStream) => {
         handleRemoteStream(remoteStream);
       });
+
       call.on('close', () => {
         handleRemoteDisconnect();
+      });
+
+      call.on('error', (err) => {
+        console.error('Call error (guest):', err);
+      });
+    }, 1000); // 1 s grace period for host listener registration
+  });
+
+  peer.on('error', (err) => {
+    console.error('Guest peer error:', err.type, err);
+    showCustomAlert('Connection error (' + err.type + '). Check your network and try again.');
+  });
+}
+
+// ─── Host: claim the room ID and wait for the guest to call in ────────────────
+
+function initializePeerConnection(roomId) {
+  console.log('Starting peer connection for room:', roomId);
+
+  if (typeof Peer === 'undefined') {
+    showCustomAlert('Error: PeerJS library failed to load. Check your internet connection.');
+    return;
+  }
+
+  // Destroy any stale peer
+  if (peer) { try { peer.destroy(); } catch(e) {} }
+
+  // Use a short, stable room ID so both peers can find each other
+  peer = new Peer(roomId, {
+    debug: 2 // useful for diagnosing issues in the browser console
+  });
+
+  peer.on('open', (id) => {
+    console.log('Claimed host peer ID:', id, '– waiting for guest to call in...');
+    statusText.textContent = 'Waiting for guest...';
+
+    // Answer any incoming call from the guest
+    peer.on('call', (incomingCall) => {
+      console.log('Incoming call from guest – answering...');
+
+      if (!stream) {
+        console.error('No local stream – cannot answer call.');
+        return;
+      }
+
+      currentCall = incomingCall;
+      incomingCall.answer(stream);
+
+      incomingCall.on('stream', (remoteStream) => {
+        handleRemoteStream(remoteStream);
+      });
+
+      incomingCall.on('close', () => {
+        handleRemoteDisconnect();
+      });
+
+      incomingCall.on('error', (err) => {
+        console.error('Call error (host):', err);
       });
     });
   });
 
   peer.on('error', (err) => {
-    if (err.type === 'id-taken') {
-      console.log('Primary communication bridge claimed. Connecting as pipeline child node...');
+    if (err.type === 'unavailable-id' || err.type === 'id-taken') {
+      // Room is already claimed – join as guest instead
+      console.log('Room ID already taken – switching to guest mode...');
       connectAsGuest(roomId);
     } else {
-      console.error('Critical bridge node communication error:', err.type, err);
+      console.error('Host peer error:', err.type, err);
+      showCustomAlert('Connection error (' + err.type + '). Check your network and try again.');
     }
   });
 }
 
-// Single Action Common Workspace Router Trigger 
+// ─── Join Workspace button ─────────────────────────────────────────────────────
+// IMPORTANT: Both devices MUST use the same ROOM_ID to find each other.
+// PeerJS free broker has a 50-char ID limit – keep it short and alphanumeric only.
+const ROOM_ID = 'telehealth-room-1'; // ← change this if you want a private room
+
 startSessionBtn.addEventListener('click', async () => {
   landingPage.style.display = 'none';
-  const name = "Doctor";
   videoGrid.innerHTML = '';
+  statusText.textContent = 'Requesting camera…';
 
-  try { 
+  // 1. Get local media FIRST – before touching PeerJS
+  try {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: true }); 
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: true
+      });
     } else {
-      throw new Error('Sandbox context lock error');
+      throw new Error('getUserMedia not supported in this browser/context.');
     }
-  } catch (e) { 
-    console.warn('Hardware pipeline stream simulation active.'); 
+  } catch (e) {
+    console.warn('Could not get camera/mic:', e.message);
+    showCustomAlert('Could not access camera or microphone.\n\nMake sure you:\n• Allowed camera/mic permission\n• Are using HTTPS (not http://)\n• Are not in a browser that blocks WebRTC');
+    landingPage.style.display = 'flex';
+    return; // stop here – we NEED the stream to make WebRTC calls
   }
 
+  // 2. Build the local video tile
   document.body.classList.add('joined');
-  statusText.textContent = name + " (Live)";
+  statusText.textContent = 'Connecting…';
 
-  const localObj = createParticipantTile(name, 'local', stream);
+  const localObj = createParticipantTile('You (Doctor)', 'local', stream);
   remoteObj = createParticipantTile('Consulting Peer', 'remote', null);
 
   remoteObj.tile.classList.add('maximized');
@@ -746,20 +819,21 @@ startSessionBtn.addEventListener('click', async () => {
     tile.addEventListener('click', function() {
       if (this.classList.contains('minimized')) {
         const currentMax = videoGrid.querySelector('.maximized');
-        if (currentMax) { currentMax.classList.remove('maximized'); currentMax.classList.add('minimized'); }
-        this.classList.remove('minimized'); this.classList.add('maximized');
+        if (currentMax) {
+          currentMax.classList.remove('maximized');
+          currentMax.classList.add('minimized');
+        }
+        this.classList.remove('minimized');
+        this.classList.add('maximized');
       }
     });
   });
-  
-  videoGrid.appendChild(remoteObj.tile); 
+
+  videoGrid.appendChild(remoteObj.tile);
   videoGrid.appendChild(localObj.tile);
-  
-  if (stream) {
-    initializePeerConnection('telehealth-shared-common-room');
-  } else {
-    showCustomAlert("Media streams required to sync with remote pipeline peers.");
-  }
+
+  // 3. Now initialise PeerJS (stream is guaranteed non-null here)
+  initializePeerConnection(ROOM_ID);
 });
 
 micBtn.addEventListener('click', () => { if(!stream) return; micOn = !micOn; stream.getAudioTracks().forEach(t => t.enabled = micOn); micBtn.classList.toggle('off', !micOn); });
