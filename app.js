@@ -1,421 +1,129 @@
+// Global Application State
+let localStream = null;
+let currentCall = null;
+let activeConn = null;
+let peer = null;
+let myPeerId = null;
+let targetPeerId = null;
+let currentAttachmentData = null; // Holds base64 encoded attached images
+
+// DOM Element Registry
+const landingPage = document.getElementById('landingPage');
+const startSessionBtn = document.getElementById('startSessionBtn');
+const statusText = document.getElementById('statusText');
 const videoGrid = document.getElementById('videoGrid');
 const micBtn = document.getElementById('micBtn');
 const camBtn = document.getElementById('camBtn');
 const chatBtn = document.getElementById('chatBtn');
-const closeChatBtn = document.getElementById('closeChatBtn');
 const hangBtn = document.getElementById('hangBtn');
-const statusText = document.getElementById('statusText');
 const sidebarDrawer = document.getElementById('sidebarDrawer');
-const messages = document.getElementById('messages');
-const startSessionBtn = document.getElementById('startSessionBtn');
-const landingPage = document.getElementById('landingPage');
-
-let stream = null; let micOn = true; let camOn = true;
-let peer = null; let currentCall = null; let remoteObj = null;
-
-// Mobile View Adjuster Engine
-function handleMobileViewHeight() {
-  if (window.innerWidth <= 900) {
-    if (!document.body.classList.contains('chat-collapsed') && window.visualViewport) {
-      sidebarDrawer.style.height = `${window.visualViewport.height}px`;
-    } else {
-      sidebarDrawer.style.height = '';
-    }
-  } else {
-    sidebarDrawer.style.height = '';
-  }
-}
-
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', handleMobileViewHeight);
-  window.visualViewport.addEventListener('scroll', handleMobileViewHeight);
-}
-
-// Initial Mobile Load Workspace Visibility Layout Look
-if (window.innerWidth <= 900) {
-  document.body.classList.add('chat-collapsed');
-  document.body.classList.remove('chat-open');
-  chatBtn.classList.remove('active-chat');
-}
-
-// Alerts / Confirm Logic
-let currentConfirmAction = null;
-
-function showCustomAlert(message) {
-  document.getElementById('customAlertText').textContent = message;
-  document.getElementById('customAlertModal').classList.add('show');
-}
-
-document.getElementById('customAlertCloseBtn').addEventListener('click', () => {
-  document.getElementById('customAlertModal').classList.remove('show');
-});
-
-function showCustomConfirm(message, confirmedCallback) {
-  document.getElementById('customConfirmText').textContent = message;
-  currentConfirmAction = confirmedCallback;
-  document.getElementById('customConfirmModal').classList.add('show');
-}
-
-document.getElementById('customConfirmCancelBtn').addEventListener('click', () => {
-  document.getElementById('customConfirmModal').classList.remove('show');
-  currentConfirmAction = null;
-});
-
-document.getElementById('customConfirmOkBtn').addEventListener('click', () => {
-  document.getElementById('customConfirmModal').classList.remove('show');
-  if (currentConfirmAction) currentConfirmAction();
-  currentConfirmAction = null;
-});
-
-function createParticipantTile(name, type = 'remote', streamObject = null) {
-  const tile = document.createElement('div');
-  tile.className = 'tile';
-  const initials = name.charAt(0).toUpperCase();
-
-  tile.innerHTML = `
-    <video ${type === 'local' ? 'muted' : ''} autoplay playsinline></video>
-    <div class='placeholder'>
-      ${type === 'local' ? `
-      <div class='live-pulse-container'>
-        <div class='pulse-ring'></div>
-        <div class='medical'>☤</div>
-      </div>
-      <h2>Live Clinical Feed</h2>
-      <p>Camera active inside secure sandbox container.</p>
-      ` : `
-      <div class="loading-spinner"></div>
-      <h2>Connecting...</h2>
-      <p>Awaiting incoming secure media handshakes.</p>
-      `}
-    </div>
-    <div class='user-tag'><div class='avatar'>${initials}</div><div class='info'><strong>${name}</strong><span>${type === 'local' ? 'Host' : (streamObject ? 'Connected' : 'Connecting...')}</span></div></div>
-  `;
-
-  const video = tile.querySelector('video');
-  const placeholder = tile.querySelector('.placeholder');
-  if (type === 'local') video.style.transform = 'scaleX(-1)';
-
-  if (streamObject) {
-    video.srcObject = streamObject;
-    video.onloadedmetadata = () => { 
-      video.play(); 
-      placeholder.style.display = 'none'; 
-      if (type === 'remote') tile.querySelector('.info span').textContent = 'Connected';
-    };
-  } else {
-    placeholder.style.display = 'flex';
-  }
-  return { tile, video, placeholder };
-}
-
-// ─── PeerJS config with reliable STUN + free TURN (handles strict NAT/mobile) ──
-const PEER_CONFIG = {
-  debug: 0,
-  config: {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:stun.cloudflare.com:3478' },
-      {
-        urls: 'turn:openrelay.metered.ca:80',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      }
-    ]
-  }
-};
-
-function handleRemoteStream(remoteStream) {
-  console.log('REMOTE STREAM RECEIVED');
-  if (remoteObj && remoteObj.video) {
-    remoteObj.video.srcObject = remoteStream;
-    remoteObj.video.play().catch(() => {});
-    if (remoteObj.placeholder) remoteObj.placeholder.style.display = 'none';
-    const span = remoteObj.tile.querySelector('.info span');
-    if (span) span.textContent = 'Connected';
-    statusText.textContent = 'Connected (Live)';
-  }
-}
-
-function handleRemoteDisconnect() {
-  if (remoteObj && remoteObj.placeholder) {
-    remoteObj.video.srcObject = null;
-    remoteObj.placeholder.style.display = 'flex';
-    const h2 = remoteObj.placeholder.querySelector('h2');
-    if (h2) h2.textContent = 'Disconnected';
-    const p = remoteObj.placeholder.querySelector('p');
-    if (p) p.textContent = 'The remote peer has left the session.';
-    const span = remoteObj.tile.querySelector('.info span');
-    if (span) span.textContent = 'Disconnected';
-    statusText.textContent = 'Peer disconnected';
-  }
-}
-
-function setupCallHandlers(call) {
-  currentCall = call;
-  call.on('stream', handleRemoteStream);
-  call.on('close', handleRemoteDisconnect);
-  call.on('error', (err) => console.error('Call error:', err));
-}
-
-function connectAsGuest(roomId) {
-  console.log('GUEST MODE: room taken, will call host ID:', roomId);
-  if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
-
-  peer = new Peer(undefined, PEER_CONFIG);
-
-  peer.on('open', (myId) => {
-    console.log('Guest peer open, ID:', myId, '- calling host in 800ms');
-    statusText.textContent = 'Calling host...';
-    setTimeout(() => {
-      if (!stream) { showCustomAlert('No camera stream. Reload and allow camera access.'); return; }
-      const call = peer.call(roomId, stream);
-      if (!call) { showCustomAlert('Could not reach host. Make sure Device 1 joined first, then try again.'); return; }
-      setupCallHandlers(call);
-      console.log('Call placed to host:', roomId);
-    }, 800);
-  });
-
-  peer.on('error', (err) => {
-    console.error('GUEST error:', err.type, err.message);
-    if (err.type === 'network' || err.type === 'server-error') {
-      setTimeout(() => connectAsGuest(roomId), 3000);
-    } else {
-      showCustomAlert('Connection error: ' + err.type + '. Try reloading on both devices.');
-    }
-  });
-
-  peer.on('disconnected', () => { console.warn('Guest disconnected from broker, reconnecting'); peer.reconnect(); });
-}
-
-function initializePeerConnection(roomId) {
-  if (typeof Peer === 'undefined') { showCustomAlert('PeerJS failed to load. Check internet and reload.'); return; }
-  if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
-
-  console.log('HOST MODE: claiming peer ID:', roomId);
-  peer = new Peer(roomId, PEER_CONFIG);
-
-  peer.on('open', (id) => {
-    console.log('HOST peer open, ID:', id, '- waiting for guest...');
-    statusText.textContent = 'Waiting for guest...';
-
-    peer.on('call', (incomingCall) => {
-      console.log('INCOMING CALL - answering...');
-      if (!stream) { console.error('No stream to answer with'); return; }
-      incomingCall.answer(stream);
-      setupCallHandlers(incomingCall);
-    });
-  });
-
-  peer.on('error', (err) => {
-    if (err.type === 'unavailable-id' || err.type === 'id-taken') {
-      console.log('Host ID taken - switching to GUEST mode');
-      connectAsGuest(roomId);
-    } else if (err.type === 'network' || err.type === 'server-error') {
-      console.warn('Broker hiccup, retrying host in 3s:', err.type);
-      statusText.textContent = 'Connecting...';
-      setTimeout(() => initializePeerConnection(roomId), 3000);
-    } else {
-      console.error('HOST error:', err.type, err.message);
-      showCustomAlert('Connection error: ' + err.type + '. Reload the page on both devices and try again.');
-    }
-  });
-
-  peer.on('disconnected', () => { console.warn('Host disconnected from broker, reconnecting'); statusText.textContent = 'Reconnecting...'; peer.reconnect(); });
-}
-
-// ─── Join Workspace button ─────────────────────────────────────────────────────
-const ROOM_ID = 'telehealth-room-1'; 
-
-startSessionBtn.addEventListener('click', async () => {
-  landingPage.style.display = 'none';
-  videoGrid.innerHTML = '';
-  statusText.textContent = 'Requesting camera…';
-
-  try {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: true
-      });
-    } else {
-      throw new Error('getUserMedia not supported in this browser/context.');
-    }
-  } catch (e) {
-    console.warn('Could not get camera/mic:', e.message);
-    showCustomAlert('Could not access camera or microphone.\n\nMake sure you:\n• Allowed camera/mic permission\n• Are using HTTPS (not http://)\n• Are not in a browser that blocks WebRTC');
-    landingPage.style.display = 'flex';
-    return; 
-  }
-
-  document.body.classList.add('joined');
-  statusText.textContent = 'Connecting…';
-
-  const localObj = createParticipantTile('You (Doctor)', 'local', stream);
-  remoteObj = createParticipantTile('Consulting Peer', 'remote', null);
-
-  remoteObj.tile.classList.add('maximized');
-  localObj.tile.classList.add('minimized');
-
-  [localObj.tile, remoteObj.tile].forEach(tile => {
-    tile.addEventListener('click', function() {
-      if (this.classList.contains('minimized')) {
-        const currentMax = videoGrid.querySelector('.maximized');
-        if (currentMax) {
-          currentMax.classList.remove('maximized');
-          currentMax.classList.add('minimized');
-        }
-        this.classList.remove('minimized');
-        this.classList.add('maximized');
-      }
-    });
-  });
-
-  videoGrid.appendChild(remoteObj.tile);
-  videoGrid.appendChild(localObj.tile);
-
-  initializePeerConnection(ROOM_ID);
-});
-
-micBtn.addEventListener('click', () => { if(!stream) return; micOn = !micOn; stream.getAudioTracks().forEach(t => t.enabled = micOn); micBtn.classList.toggle('off', !micOn); });
-camBtn.addEventListener('click', () => { if(!stream) return; camOn = !camOn; stream.getVideoTracks().forEach(t => t.enabled = camOn); camBtn.classList.toggle('off', !camOn); });
-
-function toggleChatPanel() {
-  document.body.classList.toggle('chat-collapsed');
-  chatBtn.classList.toggle('active-chat', !document.body.classList.contains('chat-collapsed'));
-  handleMobileViewHeight();
-  if (!document.body.classList.contains('chat-collapsed')) {
-    setTimeout(() => { messages.scrollTop = messages.scrollHeight; }, 50);
-  }
-}
-chatBtn.addEventListener('click', toggleChatPanel);
-closeChatBtn.addEventListener('click', toggleChatPanel);
-
+const closeChatBtn = document.getElementById('closeChatBtn');
 const tabChatBtn = document.getElementById('tabChatBtn');
 const tabRxBtn = document.getElementById('tabRxBtn');
 const viewChat = document.getElementById('viewChat');
 const viewRx = document.getElementById('viewRx');
-
-function openChatTab() {
-  tabChatBtn.classList.add('active'); tabRxBtn.classList.remove('active');
-  viewChat.classList.add('active'); viewRx.classList.remove('active');
-  setTimeout(() => { messages.scrollTop = messages.scrollHeight; }, 30);
-}
-function openRxTab() {
-  tabRxBtn.classList.add('active'); tabChatBtn.classList.remove('active');
-  viewRx.classList.add('active'); viewChat.classList.remove('active');
-}
-tabChatBtn.addEventListener('click', openChatTab);
-tabRxBtn.addEventListener('click', openRxTab);
-
-hangBtn.addEventListener('click', () => {
-  if (stream) stream.getTracks().forEach(t => t.stop());
-  if (currentCall) currentCall.close();
-  if (peer) peer.destroy();
-  document.body.classList.remove('joined');
-  statusText.textContent = 'Disconnected'; videoGrid.innerHTML = '';
-  showCustomAlert("Session terminated.");
-  landingPage.style.display = 'flex';
-});
-
-// Chat Attachments Processing
+const messagesContainer = document.getElementById('messages');
+const chatForm = document.getElementById('chatForm');
+const chatInput = document.getElementById('chatInput');
 const photoInput = document.getElementById('photoInput');
 const triggerFileBtn = document.getElementById('triggerFileBtn');
 const uploadPreviewBar = document.getElementById('uploadPreviewBar');
 const previewThumb = document.getElementById('previewThumb');
 const removePreviewBtn = document.getElementById('removePreviewBtn');
-const chatForm = document.getElementById('chatForm');
-const chatInput = document.getElementById('chatInput');
-const messagesContainer = document.getElementById('messages');
 
-triggerFileBtn.addEventListener('click', () => photoInput.click());
-photoInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      previewThumb.src = event.target.result;
-      uploadPreviewBar.style.display = 'flex';
-    };
-    reader.readAsDataURL(file);
-  }
-});
-removePreviewBtn.addEventListener('click', () => {
-  photoInput.value = '';
-  uploadPreviewBar.style.display = 'none';
-  previewThumb.src = '';
-});
+// Prescription Form Elements
+const rxPatient = document.getElementById('rxPatient');
+const rxMedsContainer = document.getElementById('rxMedsContainer');
+const addMedBtn = document.getElementById('addMedBtn');
+const rxNotes = document.getElementById('rxNotes');
+const sendChatRxBtn = document.getElementById('sendChatRxBtn');
+const directPrintRxBtn = document.getElementById('directPrintRxBtn');
 
-chatForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const text = chatInput.value.trim();
-  const hasImg = uploadPreviewBar.style.display === 'flex';
+// Lightbox Elements
+const lightboxOverlay = document.getElementById('lightboxOverlay');
+const lightboxImg = document.getElementById('lightboxImg');
+const closeLightboxBtn = document.getElementById('closeLightboxBtn');
+const printImageBtn = document.getElementById('printImageBtn');
 
-  if (!text && !hasImg) return;
+// Custom Dialog Elements
+const customAlertModal = document.getElementById('customAlertModal');
+const customAlertText = document.getElementById('customAlertText');
+const customAlertCloseBtn = document.getElementById('customAlertCloseBtn');
+const customConfirmModal = document.getElementById('customConfirmModal');
+const customConfirmText = document.getElementById('customConfirmText');
+const customConfirmCancelBtn = document.getElementById('customConfirmCancelBtn');
+const customConfirmOkBtn = document.getElementById('customConfirmOkBtn');
 
-  if (hasImg) {
-    const wrap = document.createElement('div');
-    wrap.className = 'chat-img-wrap';
-    const img = document.createElement('img');
-    img.src = previewThumb.src;
-    img.addEventListener('click', () => {
-      document.getElementById('lightboxImg').src = img.src;
-      document.getElementById('lightboxOverlay').style.display = 'flex';
-    });
-    wrap.appendChild(img);
-    if (text) {
-      const msg = document.createElement('div');
-      msg.className = 'msg me';
-      msg.textContent = text;
-      wrap.appendChild(msg);
-    }
-    messagesContainer.appendChild(wrap);
-    photoInput.value = '';
-    uploadPreviewBar.style.display = 'none';
-    previewThumb.src = '';
-  } else {
-    const msg = document.createElement('div');
-    msg.className = 'msg me';
-    msg.textContent = text;
-    messagesContainer.appendChild(msg);
-  }
-  chatInput.value = '';
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+// --------------------------------------------------------
+// Custom Dialog & Alert Utilities
+// --------------------------------------------------------
+function showAlert(message) {
+  customAlertText.textContent = message;
+  customAlertModal.classList.add('active');
+}
+customAlertCloseBtn.addEventListener('click', () => {
+  customAlertModal.classList.remove('active');
 });
 
-document.getElementById('closeLightboxBtn').addEventListener('click', () => {
-  document.getElementById('lightboxOverlay').style.display = 'none';
+function showConfirm(message, onConfirm) {
+  customConfirmText.textContent = message;
+  customConfirmModal.classList.add('active');
+  
+  const handleOk = () => {
+    onConfirm();
+    cleanup();
+  };
+  const handleCancel = () => {
+    cleanup();
+  };
+  const cleanup = () => {
+    customConfirmOkBtn.removeEventListener('click', handleOk);
+    customConfirmCancelBtn.removeEventListener('click', handleCancel);
+    customConfirmModal.classList.remove('active');
+  };
+  
+  customConfirmOkBtn.addEventListener('click', handleOk);
+  customConfirmCancelBtn.addEventListener('click', handleCancel);
+}
+
+// --------------------------------------------------------
+// Navigation, Sidebar, and Tab Control UI
+// --------------------------------------------------------
+chatBtn.addEventListener('click', () => {
+  document.body.classList.toggle('chat-open');
 });
-document.getElementById('printImageBtn').addEventListener('click', () => {
-  const win = window.open('');
-  win.document.write(`<img src="${document.getElementById('lightboxImg').src}" style="max-width:100%;">`);
-  win.document.close();
-  win.focus();
-  win.print();
-  win.close();
+closeChatBtn.addEventListener('click', () => {
+  document.body.classList.remove('chat-open');
 });
 
-// Medication Added Multi-Group Row Manager
+tabChatBtn.addEventListener('click', () => {
+  tabChatBtn.classList.add('active');
+  tabRxBtn.classList.remove('active');
+  viewChat.classList.add('active');
+  viewRx.classList.remove('active');
+});
+
+tabRxBtn.addEventListener('click', () => {
+  tabRxBtn.classList.add('active');
+  tabChatBtn.classList.remove('active');
+  viewRx.classList.add('active');
+  viewChat.classList.remove('active');
+});
+
+// Dynamic Medication Rows for Rx Builder
 let medCount = 1;
-document.getElementById('addMedBtn').addEventListener('click', () => {
+addMedBtn.addEventListener('click', () => {
   medCount++;
-  const group = document.createElement('div');
-  group.className = 'med-group';
-  group.innerHTML = `
-    <div class="med-row-header">
+  const medGroup = document.createElement('div');
+  medGroup.classList.add('med-group');
+  medGroup.style.marginTop = '15px';
+  medGroup.style.borderTop = '1px dashed #e2e8f0';
+  medGroup.style.paddingTop = '15px';
+  
+  medGroup.innerHTML = `
+    <div class="med-row-header" style="display:flex; justify-content:space-between; align-items:center;">
       <label style="font-size: 11px; font-weight: 700; color: var(--meet-green-dark); text-transform: uppercase; letter-spacing: 0.5px;">Medication #${medCount}</label>
-      <button type="button" class="remove-med-btn">&times; Remove</button>
+      <button type="button" class="btn-remove-med" style="background:none; border:none; color:#e53e3e; font-size:12px; cursor:pointer;">Remove</button>
     </div>
     <div class="rx-field">
       <label>Medication Name</label>
@@ -430,96 +138,456 @@ document.getElementById('addMedBtn').addEventListener('click', () => {
       <input type="text" class="rx-input rx-med-freq" placeholder="e.g. 1 Tablet twice daily for 5 days">
     </div>
   `;
-  group.querySelector('.remove-med-btn').addEventListener('click', () => { group.remove(); });
-  document.getElementById('rxMedsContainer').appendChild(group);
+  
+  medGroup.querySelector('.btn-remove-med').addEventListener('click', () => {
+    medGroup.remove();
+  });
+  rxMedsContainer.appendChild(medGroup);
 });
 
-// Prescription Management Formatting Logic
-function getRxData() {
-  const medGroups = document.querySelectorAll('.med-group');
-  const medsList = [];
+// --------------------------------------------------------
+// Main Initialization Routine
+// --------------------------------------------------------
+startSessionBtn.addEventListener('click', async () => {
+  landingPage.style.display = 'none';
+  statusText.textContent = 'Connecting to AV hardware...';
   
-  medGroups.forEach(group => {
-    const nameVal = group.querySelector('.rx-med-name').value.trim();
-    if (nameVal) {
-      medsList.push({
-        name: nameVal,
-        dosage: group.querySelector('.rx-med-dosage').value.trim(),
-        freq: group.querySelector('.rx-med-freq').value.trim()
-      });
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    displayLocalStream(localStream);
+    initializePeer();
+  } catch (err) {
+    console.error(err);
+    statusText.textContent = 'Hardware access blocked';
+    showAlert('Could not initialize video/audio hardware. Please verify system permissions.');
+  }
+});
+
+function displayLocalStream(stream) {
+  if (document.getElementById('localVideoContainer')) return;
+  
+  const container = document.createElement('div');
+  container.className = 'video-wrapper local';
+  container.id = 'localVideoContainer';
+  
+  const video = document.createElement('video');
+  video.srcObject = stream;
+  video.autoplay = true;
+  video.playsInline = true;
+  video.muted = true; 
+  
+  const badge = document.createElement('div');
+  badge.className = 'video-label';
+  badge.textContent = 'You (Local)';
+  
+  container.appendChild(video);
+  container.appendChild(badge);
+  videoGrid.appendChild(container);
+}
+
+// --------------------------------------------------------
+// Core Signaling & Network Configuration
+// --------------------------------------------------------
+function initializePeer() {
+  statusText.textContent = 'Synchronizing secure server pipeline...';
+  
+  // URL Hash routing setup: checks if explicit channel room is set
+  const hash = window.location.hash.replace('#', '');
+  
+  if (hash === 'host' || !hash) {
+    myPeerId = 'telehealth-session-host-secured';
+    targetPeerId = 'telehealth-session-client-secured';
+    if (!hash) window.location.hash = 'host';
+  } else {
+    myPeerId = 'telehealth-session-client-secured';
+    targetPeerId = 'telehealth-session-host-secured';
+  }
+
+  // Connects directly to localized or configured broker stack
+  peer = new Peer(myPeerId, {
+    host: window.location.hostname,
+    port: window.location.port || (window.location.protocol === 'https:' ? 443 : 80),
+    path: '/peerjs',
+    debug: 1
+  });
+
+  peer.on('open', (id) => {
+    console.log('Secure channel allocated ID:', id);
+    statusText.textContent = 'Ready. Awaiting remote provider connection...';
+    document.querySelector('.connection .dot').style.backgroundColor = '#ecc94b';
+    
+    // Client initiates synchronization pipeline immediately
+    if (myPeerId === 'telehealth-session-client-secured') {
+      establishSecurePipeline();
     }
   });
 
-  if (medsList.length === 0) {
-    medsList.push({ name: '_______________________', dosage: '', freq: 'As directed' });
+  // CRITICAL FIX: Remote Data Listener for incoming message pipelines
+  peer.on('connection', (conn) => {
+    console.log('Inbound secure text pipeline open requested by peer.');
+    activeConn = conn;
+    bindDataPipelineEvents(activeConn);
+  });
+
+  // Remote Audio/Video Streaming Request Interceptor
+  peer.on('call', (call) => {
+    console.log('Inbound encrypted AV stream requested.');
+    currentCall = call;
+    call.answer(localStream);
+    
+    call.on('stream', (remoteStream) => {
+      displayRemoteStream(remoteStream);
+    });
+    
+    call.on('close', () => {
+      removeRemoteVideo();
+    });
+  });
+
+  peer.on('error', (err) => {
+    console.error('Peer pipeline exception:', err);
+    if (err.type === 'peer-not-found') {
+      statusText.textContent = 'Target line offline. Retrying...';
+      setTimeout(() => {
+        if (myPeerId === 'telehealth-session-client-secured') establishSecurePipeline();
+      }, 3000);
+    } else {
+      statusText.textContent = 'Pipeline error';
+    }
+  });
+}
+
+// Client Handshake Initialization Wrapper
+function establishSecurePipeline() {
+  statusText.textContent = 'Connecting to workspace...';
+  
+  // Initialize the mandatory text data pipeline
+  activeConn = peer.connect(targetPeerId, { reliable: true });
+  bindDataPipelineEvents(activeConn);
+  
+  // Initialize the parallel AV multi-media stream
+  currentCall = peer.call(targetPeerId, localStream);
+  currentCall.on('stream', (remoteStream) => {
+    displayRemoteStream(remoteStream);
+  });
+  currentCall.on('close', () => {
+    removeRemoteVideo();
+  });
+}
+
+function displayRemoteStream(stream) {
+  if (document.getElementById('remoteVideoContainer')) return;
+  
+  const container = document.createElement('div');
+  container.className = 'video-wrapper remote';
+  container.id = 'remoteVideoContainer';
+  
+  const video = document.createElement('video');
+  video.srcObject = stream;
+  video.autoplay = true;
+  video.playsInline = true;
+  
+  const badge = document.createElement('div');
+  badge.className = 'video-label';
+  badge.textContent = 'Remote Participant';
+  
+  container.appendChild(video);
+  container.appendChild(badge);
+  videoGrid.appendChild(container);
+  
+  statusText.textContent = 'Pipeline Active (Encrypted)';
+  document.querySelector('.connection .dot').style.backgroundColor = 'var(--meet-green-primary)';
+}
+
+function removeRemoteVideo() {
+  const remoteVideo = document.getElementById('remoteVideoContainer');
+  if (remoteVideo) remoteVideo.remove();
+  statusText.textContent = 'Remote participant disconnected';
+  document.querySelector('.connection .dot').style.backgroundColor = '#e53e3e';
+}
+
+// --------------------------------------------------------
+// CRITICAL CORRECTION: Bidirectional Data Stream Binder
+// --------------------------------------------------------
+function bindDataPipelineEvents(conn) {
+  conn.on('open', () => {
+    console.log('Secure bidirectional text pipeline verified.');
+    statusText.textContent = 'Pipeline Active (Encrypted)';
+    document.querySelector('.connection .dot').style.backgroundColor = 'var(--meet-green-primary)';
+  });
+
+  // EXPLICIT SYSTEM CORRECTION: Listen for and render incoming text/image blocks
+  conn.on('data', (data) => {
+    console.log('Encrypted packet payload payload received:', data);
+    if (data && (data.text || data.image || data.type === 'prescription')) {
+      appendMessage('remote', data);
+    }
+  });
+
+  conn.on('close', () => {
+    console.warn('Secure data channel connection dropped by peer.');
+    activeConn = null;
+    statusText.textContent = 'Data tunnel connection lost';
+    document.querySelector('.connection .dot').style.backgroundColor = '#ecc94b';
+  });
+  
+  conn.on('error', (err) => {
+    console.error('Data tunnel channel runtime exception:', err);
+  });
+}
+
+// --------------------------------------------------------
+// Messaging Pipeline & Renderer Logic
+// --------------------------------------------------------
+chatForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  
+  const messageText = chatInput.value.trim();
+  if (!messageText && !currentAttachmentData) return;
+
+  const payload = {
+    sender: myPeerId,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    text: messageText || null,
+    image: currentAttachmentData || null
+  };
+
+  // Fail-safe state interception if user attempts transmission over dead connection
+  if (!activeConn || !activeConn.open) {
+    showAlert('Message delivery failed: Safe channel connection is offline. Attempting pipeline restoration...');
+    if (myPeerId === 'telehealth-session-client-secured') {
+      establishSecurePipeline();
+    }
+    return;
   }
 
-  return {
-    patient: document.getElementById('rxPatient').value.trim() || '_______________________',
-    meds: medsList,
-    notes: document.getElementById('rxNotes').value.trim() || '',
-    dateStr: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-  };
-}
+  // Synchronous network dispatch across Data Channel
+  activeConn.send(payload);
+  
+  // Render message natively inside local window frame
+  appendMessage('local', payload);
+  
+  // Clean UI input area buffers
+  chatInput.value = '';
+  clearImageAttachment();
+});
 
-document.getElementById('sendChatRxBtn').addEventListener('click', () => {
-  showCustomConfirm("Send this digital prescription to the active chat session?", () => {
-    const data = getRxData();
-    const card = document.createElement('div');
-    card.className = 'rx-chat-card';
-    
+function appendMessage(origin, payload) {
+  const msgBlock = document.createElement('div');
+  msgBlock.className = `msg ${origin === 'local' ? 'sent' : 'received'}`;
+  
+  // Context Renderer for Prescription payloads
+  if (payload.type === 'prescription') {
+    msgBlock.classList.add('rx-payload-card');
     let medsHtml = '';
-    data.meds.forEach((m, idx) => {
-      medsHtml += `<p><strong>Medication #${idx+1}:</strong> ${m.name} ${m.dosage} - ${m.freq}</p>`;
+    payload.medications.forEach(m => {
+      medsHtml += `<div style="margin-top:6px; font-size:12px; background:#f7fafc; padding:6px; border-left:3px solid var(--meet-green-primary);">
+        <strong>${escapeHtml(m.name)}</strong> - ${escapeHtml(m.dosage)}<br>
+        <span style="font-size:11px; color:#4a5568;">${escapeHtml(m.frequency)}</span>
+      </div>`;
     });
-
-    card.innerHTML = `
-      <div class="rx-chat-header"><span class="icon">℞</span> Prescription Doc</div>
-      <div class="rx-chat-body">
-        <p><strong>Patient:</strong> ${data.patient}</p>
-        ${medsHtml}
-        ${data.notes ? `<p><strong>Notes:</strong> ${data.notes}</p>` : ''}
-        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Issued: ${data.dateStr}</p>
-      </div>
-      <div class="rx-chat-footer">
-        <button class="inline-print-btn rx-print-trigger">Print</button>
-      </div>
-    `;
     
-    card.querySelector('.rx-print-trigger').addEventListener('click', () => { printPrescriptionData(data); });
-    messagesContainer.appendChild(card);
+    msgBlock.innerHTML = `
+      <div style="display:flex; align-items:center; gap:8px; border-bottom:1px solid #edf2f7; padding-bottom:6px; margin-bottom:6px;">
+        <span style="font-size:18px; color:var(--meet-green-primary)">℞</span>
+        <strong style="font-size:13px; color:var(--meet-green-dark)">Official Digital Prescription</strong>
+      </div>
+      <div style="font-size:12px; margin-bottom:4px;"><strong>Patient:</strong> ${escapeHtml(payload.patient)}</div>
+      ${medsHtml}
+      ${payload.notes ? `<div style="margin-top:8px; font-size:11px; font-style:italic; color:#718096; border-top:1px dashed #edf2f7; paddingTop:6px;">Notes: ${escapeHtml(payload.notes)}</div>` : ''}
+      <div style="text-align:right; font-size:9px; opacity:0.6; margin-top:6px;">${payload.timestamp}</div>
+    `;
+    messagesContainer.appendChild(msgBlock);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    openChatTab();
-  });
-});
+    return;
+  }
 
-document.getElementById('directPrintRxBtn').addEventListener('click', () => {
-  const data = getRxData();
-  printPrescriptionData(data);
-});
-
-function printPrescriptionData(data) {
-  const win = window.open('', '_blank');
-  let medsLines = '';
-  data.meds.forEach((m, i) => {
-    medsLines += `<li><strong>${m.name}</strong> ${m.dosage} <br><small>${m.freq}</small></li>`;
-  });
-  win.document.write(`
-    <html>
-    <head><title>Prescription - ${data.patient}</title></head>
-    <body style="font-family:sans-serif; padding:40px; color:#1e293b;">
-      <h2 style="color:#34A853; border-bottom:2px solid #34A853; padding-bottom:10px;">℞ Telemedicine Sync - Prescription</h2>
-      <p><strong>Date:</strong> ${data.dateStr}</p>
-      <p><strong>Patient Name:</strong> ${data.patient}</p>
-      <hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;">
-      <h3>Medications:</h3>
-      <ul>${medsLines}</ul>
-      ${data.notes ? '<hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;"><h3>Notes / Directions:</h3><p>' + data.notes + '</p>' : ''}
-      <br><br><br>
-      <p style="border-top:1px solid #cbd5e1; display:inline-block; padding-top:5px; width:200px;">Authorized Electronic Signature</p>
-      <script>window.onload = function() { window.print(); window.close(); }</script>
-    </body>
-    </html>
-  `);
-  win.document.close();
+  // Renderer Context for typical Text & File attachments
+  let content = '';
+  if (payload.image) {
+    content += `<img src="${payload.image}" class="chat-embedded-img" style="max-width:100%; border-radius:8px; margin-bottom:4px; cursor:pointer;" onclick="launchLightbox('${payload.image}')" alt="Shared Media">`;
+  }
+  if (payload.text) {
+    content += `<p style="margin:0; word-break:break-word;">${escapeHtml(payload.text)}</p>`;
+  }
+  
+  content += `<span class="time" style="display:block; text-align:right; font-size:9px; opacity:0.6; margin-top:2px;">${payload.timestamp}</span>`;
+  msgBlock.innerHTML = content;
+  
+  messagesContainer.appendChild(msgBlock);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+// --------------------------------------------------------
+// Media File Buffer Handling & Attachments Pipeline
+// --------------------------------------------------------
+triggerFileBtn.addEventListener('click', () => photoInput.click());
+
+photoInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    showAlert('Format blocked: Only active image file types can be shared over clinical sessions.');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    currentAttachmentData = event.target.result;
+    previewThumb.src = currentAttachmentData;
+    uploadPreviewBar.classList.add('active');
+  };
+  reader.readAsDataURL(file);
+});
+
+removePreviewBtn.addEventListener('click', clearImageAttachment);
+
+function clearImageAttachment() {
+  currentAttachmentData = null;
+  photoInput.value = '';
+  uploadPreviewBar.classList.remove('active');
+  previewThumb.src = '';
+}
+
+// --------------------------------------------------------
+// Clinical Rx Form Actions & Verification Pipelines
+// --------------------------------------------------------
+sendChatRxBtn.addEventListener('click', () => {
+  const patientName = rxPatient.value.trim();
+  if (!patientName) {
+    showAlert('Validation Failed: A valid Patient Name registry value is mandatory.');
+    return;
+  }
+
+  const compiledMedications = [];
+  const medRows = rxMedsContainer.querySelectorAll('.med-group');
+  let validMeds = true;
+
+  medRows.forEach(row => {
+    const name = row.querySelector('.rx-med-name').value.trim();
+    const dosage = row.querySelector('.rx-med-dosage').value.trim();
+    const frequency = row.querySelector('.rx-med-freq').value.trim();
+
+    if (!name || !dosage || !frequency) {
+      validMeds = false;
+      return;
+    }
+    compiledMedications.push({ name, dosage, frequency });
+  });
+
+  if (!validMeds || compiledMedications.length === 0) {
+    showAlert('Validation Failed: All dynamic fields inside open Medication Rows must be fully populated.');
+    return;
+  }
+
+  showConfirm('Verify transmission: Submit generated prescription sheet directly into current secure conversation channel?', () => {
+    const rxPayload = {
+      type: 'prescription',
+      sender: myPeerId,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      patient: patientName,
+      medications: compiledMedications,
+      notes: rxNotes.value.trim()
+    };
+
+    if (activeConn && activeConn.open) {
+      activeConn.send(rxPayload);
+      appendMessage('local', rxPayload);
+      
+      // Reset Clinical Script Panel Inputs
+      rxPatient.value = '';
+      rxNotes.value = '';
+      rxMedsContainer.innerHTML = `
+        <div class="med-group">
+          <div class="med-row-header">
+            <label style="font-size: 11px; font-weight: 700; color: var(--meet-green-dark); text-transform: uppercase; letter-spacing: 0.5px;">Medication #1</label>
+          </div>
+          <div class="rx-field">
+            <label>Medication Name</label>
+            <input type="text" class="rx-input rx-med-name" placeholder="e.g. Amoxicillin">
+          </div>
+          <div class="rx-field">
+            <label>Dosage strength</label>
+            <input type="text" class="rx-input rx-med-dosage" placeholder="e.g. 500mg">
+          </div>
+          <div class="rx-field">
+            <label>Frequency & Duration</label>
+            <input type="text" class="rx-input rx-med-freq" placeholder="e.g. 1 Tablet twice daily for 5 days">
+          </div>
+        </div>
+      `;
+      medCount = 1;
+      tabChatBtn.click(); // Automatically shift viewport back to raw messages line
+    } else {
+      showAlert('Transmission failed: Network pipe context offline.');
+    }
+  });
+});
+
+directPrintRxBtn.addEventListener('click', () => {
+  window.print();
+});
+
+// --------------------------------------------------------
+// Lightbox Expansion UI Engine
+// --------------------------------------------------------
+window.launchLightbox = function(sourceUri) {
+  lightboxImg.src = sourceUri;
+  lightboxOverlay.classList.add('active');
+};
+
+closeLightboxBtn.addEventListener('click', () => {
+  lightboxOverlay.classList.remove('active');
+  lightboxImg.src = '';
+});
+
+printImageBtn.addEventListener('click', () => {
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`<html><body style="margin:0; display:flex; justify-content:center; align-items:center; height:100vh;"><img src="${lightboxImg.src}" style="max-width:100%; max-height:100%; object-fit:contain;"></body></html>`);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.onload = function() {
+    printWindow.print();
+    printWindow.close();
+  };
+});
+
+// --------------------------------------------------------
+// Call Session Hardware Control Handlers
+// --------------------------------------------------------
+micBtn.addEventListener('click', () => {
+  if (!localStream) return;
+  const audioTrack = localStream.getAudioTracks()[0];
+  if (audioTrack) {
+    audioTrack.enabled = !audioTrack.enabled;
+    micBtn.classList.toggle('disabled', !audioTrack.enabled);
+    micBtn.setAttribute('aria-label', audioTrack.enabled ? 'Mute' : 'Unmute');
+  }
+});
+
+camBtn.addEventListener('click', () => {
+  if (!localStream) return;
+  const videoTrack = localStream.getVideoTracks()[0];
+  if (videoTrack) {
+    videoTrack.enabled = !videoTrack.enabled;
+    camBtn.classList.toggle('disabled', !videoTrack.enabled);
+    camBtn.setAttribute('aria-label', videoTrack.enabled ? 'Camera Off' : 'Camera On');
+  }
+});
+
+hangBtn.addEventListener('click', () => {
+  showConfirm('Are you sure you want to disconnect and exit this clinical sandbox session?', () => {
+    if (currentCall) currentCall.close();
+    if (activeConn) activeConn.close();
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+    }
+    window.location.reload();
+  });
+});
