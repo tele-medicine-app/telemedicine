@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="viewport" width="device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>Telemedicine Sync</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
 :root {
   --bg-app: #f1f5f9;       
@@ -34,7 +35,7 @@ html, body {
   gap: 16px;
 }
 
-/* Landing Page Overlay - No Room Inputs */
+/* Landing Page Overlay */
 .landing-overlay {
   position: fixed; inset: 0; background: var(--bg-app); z-index: 500;
   display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -203,20 +204,21 @@ video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 
 /* Chat Elements */
 .messages { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
-.msg { padding: 14px 18px; border-radius: 20px; font-size: 14px; max-width: 85%; line-height: 1.5; word-wrap: break-word; box-shadow: var(--shadow-sm); }
-.system { border: 1px solid var(--border); color: var(--muted); background: var(--bg-app); align-self: center; font-size: 12px; text-align: center; border-radius: 999px; padding: 10px 20px; }
-.me { margin-left: auto; color: #fff; background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); border-bottom-right-radius: 4px; }
-.chat-img-wrap { margin-left: auto; max-width: 85%; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.msg { padding: 14px 18px; border-radius: 20px; font-size: 14px; max-width: 85%; line-height: 1.5; word-wrap: break-word; box-shadow: var(--shadow-sm); background: #e2e8f0; color: var(--text); align-self: flex-start; }
+.system { border: 1px solid var(--border); color: var(--muted); background: var(--bg-app); align-self: center; font-size: 12px; text-align: center; border-radius: 999px; padding: 10px 20px; box-shadow: none; }
+.me { margin-left: auto; align-self: flex-end; color: #fff; background: linear-gradient(135deg, var(--meet-green-primary), var(--meet-green-dark)); border-bottom-right-radius: 4px; }
+.chat-img-wrap { max-width: 85%; display: flex; flex-direction: column; gap: 10px; }
 .chat-img-wrap img { max-width: 100%; border-radius: 16px; border: 1px solid var(--border); cursor: pointer; box-shadow: var(--shadow-sm); }
 .inline-print-btn { background: var(--panel); border: 1px solid var(--border); color: var(--muted); padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
 .inline-print-btn:hover { background: var(--bg-app); color: var(--text); border-color: var(--muted); }
 
 /* Prescription Chat Card */
 .rx-chat-card {
-  margin-left: auto; background: #ffffff; color: var(--text); border: 1px solid var(--meet-green-primary); 
-  border-radius: 16px; border-bottom-right-radius: 4px; padding: 0; box-shadow: 0 4px 12px rgba(52,168,83,0.15);
-  width: 90%; overflow: hidden;
+  background: #ffffff; color: var(--text); border: 1px solid var(--meet-green-primary); 
+  border-radius: 16px; padding: 0; box-shadow: 0 4px 12px rgba(52,168,83,0.15);
+  width: 90%; overflow: hidden; align-self: flex-start;
 }
+.rx-chat-card.me-rx { align-self: flex-end; border-bottom-right-radius: 4px; }
 .rx-chat-header {
   background: var(--meet-green-light); padding: 12px 16px; font-weight: 600; color: var(--meet-green-dark);
   display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #cce8d6;
@@ -308,53 +310,20 @@ textarea.rx-input { resize: vertical; min-height: 80px; }
   .main { grid-template-columns: 1fr; }
   
   .sidebar-panel {
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: 0;
-    z-index: 200;
-    width: 100vw;
-    height: 100%;
-    border-radius: 0;
-    border: none;
-    display: flex !important;
-    flex-direction: column;
-    margin: 0;
-    padding: 0;
-    transform: translateX(0);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: fixed; left: 0; right: 0; top: 0; z-index: 200; width: 100vw; height: 100%;
+    border-radius: 0; border: none; display: flex !important; flex-direction: column; margin: 0; padding: 0;
+    transform: translateX(0); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
-  body.chat-collapsed .sidebar-panel {
-    transform: translateX(100%);
-    pointer-events: none;
-  }
-  
-  .view-container.active {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  
+  body.chat-collapsed .sidebar-panel { transform: translateX(100%); pointer-events: none; }
+  .view-container.active { display: flex; flex: 1; flex-direction: column; overflow: hidden; }
   .sidebar-header { padding: 12px 16px; flex-shrink: 0; }
   .tab-btn { padding: 8px 16px; font-size: 14px; }
-  
-  .messages { 
-    flex: 1; 
-    padding: 16px; 
-    gap: 12px; 
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+  .messages { flex: 1; padding: 16px; gap: 12px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .msg { padding: 12px 14px; font-size: 13px; max-width: 90%; }
   
   .chat-input-area { 
-    flex-shrink: 0;
-    padding: 12px 16px; 
-    padding-bottom: max(12px, env(safe-area-inset-bottom)); 
-    background: var(--panel);
-    border-top: 1px solid var(--border);
+    flex-shrink: 0; padding: 12px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom)); 
+    background: var(--panel); border-top: 1px solid var(--border);
   }
   .input-wrap { padding: 4px 4px 4px 12px; }
   .input-wrap input[type="text"] { font-size: 14px; padding: 8px 0; }
@@ -538,20 +507,10 @@ const startSessionBtn = document.getElementById('startSessionBtn');
 const landingPage = document.getElementById('landingPage');
 
 let stream = null; let micOn = true; let camOn = true;
-let socket = null; let pc = null; let remoteObj = null;
+let peer = null; let currentCall = null; let remoteObj = null;
+let dataConn = null; // High speed network sync link
 
-const ROOM_ID = 'telehealth-room-1';
-// Detect production environment or fall back to native development addresses
-const SIGNAL_URL = window.location.location === 'https:' ? `wss://${window.location.host}` : 'ws://localhost:3000';
-
-const RTC_CONFIG = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun.cloudflare.com:3478' }
-  ]
-};
-
+// Mobile View Adjuster Engine
 function handleMobileViewHeight() {
   if (window.innerWidth <= 900) {
     if (!document.body.classList.contains('chat-collapsed') && window.visualViewport) {
@@ -634,7 +593,7 @@ function createParticipantTile(name, type = 'remote', streamObject = null) {
   if (streamObject) {
     video.srcObject = streamObject;
     video.onloadedmetadata = () => { 
-      video.play().catch(() => {}); 
+      video.play(); 
       placeholder.style.display = 'none'; 
       if (type === 'remote') tile.querySelector('.info span').textContent = 'Connected';
     };
@@ -644,107 +603,34 @@ function createParticipantTile(name, type = 'remote', streamObject = null) {
   return { tile, video, placeholder };
 }
 
-// ─── Native WebRTC Integration Engines ───
-function initializeEngineConnection() {
-  socket = new WebSocket(SIGNAL_URL);
+const PEER_CONFIG = {
+  debug: 0,
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun.cloudflare.com:3478' },
+      { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+      { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+      { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+    ]
+  }
+};
 
-  socket.onopen = () => {
-    statusText.textContent = 'Joining channel...';
-    // Unique session ID token generation
-    const myId = Math.random().toString(36).substr(2, 9);
-    socket.send(JSON.stringify({ type: 'join', roomId: ROOM_ID, peerId: myId }));
-  };
-
-  socket.onmessage = async (message) => {
-    const data = JSON.parse(message.data);
-
-    switch (data.type) {
-      case 'peer-joined':
-        statusText.textContent = 'Connecting link...';
-        createPeerConnection();
-        // Initiator creates session proposal configuration offer
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        socket.send(JSON.stringify({ type: 'offer', offer, roomId: ROOM_ID }));
-        break;
-
-      case 'offer':
-        if (!pc) createPeerConnection();
-        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        socket.send(JSON.stringify({ type: 'answer', answer, roomId: ROOM_ID }));
-        break;
-
-      case 'answer':
-        if (pc) {
-          await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-        }
-        break;
-
-      case 'candidate':
-        if (pc) {
-          try {
-            await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-          } catch (e) {
-            console.error('Candidate processing rejection:', e);
-          }
-        }
-        break;
-
-      case 'peer-left':
-        handleRemoteDisconnect();
-        break;
-    }
-  };
-
-  socket.onerror = () => {
-    statusText.textContent = 'Core Pipeline Error';
-  };
-
-  socket.onclose = () => {
-    statusText.textContent = 'Disconnected';
-  };
-}
-
-function createPeerConnection() {
-  if (pc) return;
-
-  pc = new RTCPeerConnection(RTC_CONFIG);
-
-  // Bind structural multi-media logic tracking pipelines
-  stream.getTracks().forEach(track => pc.addTrack(track, stream));
-
-  pc.onicecandidate = (event) => {
-    if (event.candidate) {
-      socket.send(JSON.stringify({ type: 'candidate', candidate: event.candidate, roomId: ROOM_ID }));
-    }
-  };
-
-  pc.ontrack = (event) => {
-    console.log('Remote data media feed acquired.');
-    if (remoteObj && remoteObj.video) {
-      remoteObj.video.srcObject = event.streams[0];
-      remoteObj.video.play().catch(() => {});
-      if (remoteObj.placeholder) remoteObj.placeholder.style.display = 'none';
-      const span = remoteObj.tile.querySelector('.info span');
-      if (span) span.textContent = 'Connected';
-      statusText.textContent = 'Connected (Live)';
-    }
-  };
-
-  pc.onconnectionstatechange = () => {
-    if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
-      handleRemoteDisconnect();
-    }
-  };
+function handleRemoteStream(remoteStream) {
+  console.log('REMOTE STREAM RECEIVED');
+  if (remoteObj && remoteObj.video) {
+    remoteObj.video.srcObject = remoteStream;
+    remoteObj.video.play().catch(() => {});
+    if (remoteObj.placeholder) remoteObj.placeholder.style.display = 'none';
+    const span = remoteObj.tile.querySelector('.info span');
+    if (span) span.textContent = 'Connected';
+    statusText.textContent = 'Connected (Live)';
+  }
 }
 
 function handleRemoteDisconnect() {
-  if (pc) {
-    pc.close();
-    pc = null;
-  }
   if (remoteObj && remoteObj.placeholder) {
     remoteObj.video.srcObject = null;
     remoteObj.placeholder.style.display = 'flex';
@@ -758,11 +644,159 @@ function handleRemoteDisconnect() {
   }
 }
 
-// ─── Control Bindings ───
+function setupCallHandlers(call) {
+  currentCall = call;
+  call.on('stream', handleRemoteStream);
+  call.on('close', handleRemoteDisconnect);
+}
+
+// System Core Network Sync Event Handlers
+function setupDataHandlers(conn) {
+  conn.on('data', (data) => {
+    if (data.type === 'chat') {
+      appendRemoteMessage(data.text, data.image);
+    } else if (data.type === 'rx') {
+      appendRemoteRx(data.rxData);
+    }
+  });
+  conn.on('close', () => { dataConn = null; });
+}
+
+function appendRemoteMessage(text, imageDataUrl) {
+  const messagesContainer = document.getElementById('messages');
+  if (imageDataUrl) {
+    const wrap = document.createElement('div');
+    wrap.className = 'chat-img-wrap';
+    const img = document.createElement('img');
+    img.src = imageDataUrl;
+    img.addEventListener('click', () => {
+      document.getElementById('lightboxImg').src = img.src;
+      document.getElementById('lightboxOverlay').style.display = 'flex';
+    });
+    wrap.appendChild(img);
+    if (text) {
+      const msg = document.createElement('div');
+      msg.className = 'msg';
+      msg.textContent = text;
+      wrap.appendChild(msg);
+    }
+    messagesContainer.appendChild(wrap);
+  } else if (text) {
+    const msg = document.createElement('div');
+    msg.className = 'msg';
+    msg.textContent = text;
+    messagesContainer.appendChild(msg);
+  }
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function appendRemoteRx(data) {
+  const messagesContainer = document.getElementById('messages');
+  const card = document.createElement('div');
+  card.className = 'rx-chat-card';
+  
+  let medsHtml = '';
+  data.meds.forEach((m, idx) => {
+    medsHtml += `<p><strong>Medication #${idx+1}:</strong> ${m.name} ${m.dosage} - ${m.freq}</p>`;
+  });
+
+  card.innerHTML = `
+    <div class="rx-chat-header" style="background:#cbd5e1; color:#334155; border-bottom:1px solid #94a3b8;"><span class="icon">℞</span> Received Prescription</div>
+    <div class="rx-chat-body">
+      <p><strong>Patient:</strong> ${data.patient}</p>
+      ${medsHtml}
+      ${data.notes ? `<p><strong>Notes:</strong> ${data.notes}</p>` : ''}
+      <p style="font-size:11px; color:var(--muted); margin-top:4px;">Issued: ${data.dateStr}</p>
+    </div>
+    <div class="rx-chat-footer">
+      <button class="inline-print-btn rx-print-trigger">Print</button>
+    </div>
+  `;
+  
+  card.querySelector('.rx-print-trigger').addEventListener('click', () => { printPrescriptionData(data); });
+  messagesContainer.appendChild(card);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  openChatTab();
+}
+
+function connectAsGuest(roomId) {
+  console.log('GUEST MODE: room taken, will call host ID:', roomId);
+  if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
+
+  peer = new Peer(undefined, PEER_CONFIG);
+
+  peer.on('connection', (conn) => {
+    dataConn = conn;
+    setupDataHandlers(conn);
+  });
+
+  peer.on('open', (myId) => {
+    statusText.textContent = 'Calling host...';
+    
+    // Connect Data Channel
+    const conn = peer.connect(roomId);
+    dataConn = conn;
+    setupDataHandlers(conn);
+
+    setTimeout(() => {
+      if (!stream) { showCustomAlert('No camera stream. Reload and allow camera access.'); return; }
+      const call = peer.call(roomId, stream);
+      if (!call) { showCustomAlert('Could not reach host.'); return; }
+      setupCallHandlers(call);
+    }, 800);
+  });
+
+  peer.on('error', (err) => {
+    if (err.type === 'network' || err.type === 'server-error') {
+      setTimeout(() => connectAsGuest(roomId), 3000);
+    } else {
+      showCustomAlert('Connection error: ' + err.type);
+    }
+  });
+
+  peer.on('disconnected', () => { peer.reconnect(); });
+}
+
+function initializePeerConnection(roomId) {
+  if (typeof Peer === 'undefined') { showCustomAlert('PeerJS failed to load.'); return; }
+  if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
+
+  peer = new Peer(roomId, PEER_CONFIG);
+
+  peer.on('connection', (conn) => {
+    dataConn = conn;
+    setupDataHandlers(conn);
+  });
+
+  peer.on('open', (id) => {
+    statusText.textContent = 'Waiting for guest...';
+
+    peer.on('call', (incomingCall) => {
+      if (!stream) { return; }
+      incomingCall.answer(stream);
+      setupCallHandlers(incomingCall);
+    });
+  });
+
+  peer.on('error', (err) => {
+    if (err.type === 'unavailable-id' || err.type === 'id-taken') {
+      connectAsGuest(roomId);
+    } else if (err.type === 'network' || err.type === 'server-error') {
+      setTimeout(() => initializePeerConnection(roomId), 3000);
+    } else {
+      showCustomAlert('Connection error: ' + err.type);
+    }
+  });
+
+  peer.on('disconnected', () => { peer.reconnect(); });
+}
+
+const ROOM_ID = 'telehealth-room-1'; 
+
 startSessionBtn.addEventListener('click', async () => {
   landingPage.style.display = 'none';
   videoGrid.innerHTML = '';
-  statusText.textContent = 'Acquiring peripheral feeds…';
+  statusText.textContent = 'Requesting camera…';
 
   try {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -771,10 +805,10 @@ startSessionBtn.addEventListener('click', async () => {
         audio: true
       });
     } else {
-      throw new Error('Device configuration layer missing permissions.');
+      throw new Error('getUserMedia not supported');
     }
   } catch (e) {
-    showCustomAlert('Could not access camera or microphone.\n\nVerify parameters context configuration requirements.');
+    showCustomAlert('Could not access camera or microphone.\n\nMake sure you:\n• Allowed permissions\n• Are using HTTPS (not http://)');
     landingPage.style.display = 'flex';
     return;
   }
@@ -805,7 +839,7 @@ startSessionBtn.addEventListener('click', async () => {
   videoGrid.appendChild(remoteObj.tile);
   videoGrid.appendChild(localObj.tile);
 
-  initializeEngineConnection();
+  initializePeerConnection(ROOM_ID);
 });
 
 micBtn.addEventListener('click', () => { if(!stream) return; micOn = !micOn; stream.getAudioTracks().forEach(t => t.enabled = micOn); micBtn.classList.toggle('off', !micOn); });
@@ -841,15 +875,15 @@ tabRxBtn.addEventListener('click', openRxTab);
 
 hangBtn.addEventListener('click', () => {
   if (stream) stream.getTracks().forEach(t => t.stop());
-  if (pc) pc.close();
-  if (socket) socket.close();
+  if (currentCall) currentCall.close();
+  if (peer) peer.destroy();
   document.body.classList.remove('joined');
   statusText.textContent = 'Disconnected'; videoGrid.innerHTML = '';
-  showCustomAlert("Session terminated safely.");
+  showCustomAlert("Session terminated.");
   landingPage.style.display = 'flex';
 });
 
-// Chat attachments processor mechanics
+// Chat Attachments Processing Engine
 const photoInput = document.getElementById('photoInput');
 const triggerFileBtn = document.getElementById('triggerFileBtn');
 const uploadPreviewBar = document.getElementById('uploadPreviewBar');
@@ -884,11 +918,16 @@ chatForm.addEventListener('submit', (e) => {
 
   if (!text && !hasImg) return;
 
+  let outgoingImagePayload = null;
+
   if (hasImg) {
+    outgoingImagePayload = previewThumb.src;
     const wrap = document.createElement('div');
     wrap.className = 'chat-img-wrap';
+    wrap.style.marginLeft = 'auto';
+    wrap.style.alignItems = 'flex-end';
     const img = document.createElement('img');
-    img.src = previewThumb.src;
+    img.src = outgoingImagePayload;
     img.addEventListener('click', () => {
       document.getElementById('lightboxImg').src = img.src;
       document.getElementById('lightboxOverlay').style.display = 'flex';
@@ -910,6 +949,12 @@ chatForm.addEventListener('submit', (e) => {
     msg.textContent = text;
     messagesContainer.appendChild(msg);
   }
+
+  // Network Blast Transmit Event
+  if (dataConn && dataConn.open) {
+    dataConn.send({ type: 'chat', text: text, image: outgoingImagePayload });
+  }
+
   chatInput.value = '';
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 });
@@ -984,7 +1029,7 @@ document.getElementById('sendChatRxBtn').addEventListener('click', () => {
   showCustomConfirm("Send this digital prescription to the active chat session?", () => {
     const data = getRxData();
     const card = document.createElement('div');
-    card.className = 'rx-chat-card';
+    card.className = 'rx-chat-card me-rx';
     
     let medsHtml = '';
     data.meds.forEach((m, idx) => {
@@ -1006,6 +1051,12 @@ document.getElementById('sendChatRxBtn').addEventListener('click', () => {
     
     card.querySelector('.rx-print-trigger').addEventListener('click', () => { printPrescriptionData(data); });
     messagesContainer.appendChild(card);
+
+    // Broadcast Rx card payload across the data pipeline channel
+    if (dataConn && dataConn.open) {
+      dataConn.send({ type: 'rx', rxData: data });
+    }
+
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     openChatTab();
   });
@@ -1022,10 +1073,6 @@ function printPrescriptionData(data) {
   data.meds.forEach((m, i) => {
     medsLines += `<li><strong>${m.name}</strong> ${m.dosage} <br><small>${m.freq}</small></li>`;
   });
-  
-  // Dynamic parsing safe array wrapper injection
-  const notesField = data.notes ? `<h3>Notes / Directions:</h3><p>${data.notes}</p>` : '';
-
   win.document.write(`
     <html>
     <head><title>Prescription - ${data.patient}</title></head>
@@ -1036,13 +1083,10 @@ function printPrescriptionData(data) {
       <hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;">
       <h3>Medications:</h3>
       <ul>${medsLines}</ul>
-      <hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;">
-      ${notesField}
+      \${data.notes ? '<hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;"><h3>Notes / Directions:</h3><p>' + data.notes + '</p>' : ''}
       <br><br><br>
       <p style="border-top:1px solid #cbd5e1; display:inline-block; padding-top:5px; width:200px;">Authorized Electronic Signature</p>
-      <script>
-        window.onload = function() { window.print(); setTimeout(() => { window.close(); }, 500); }
-      <\/script>
+      <script>window.onload = function() { window.print(); window.close(); }</s` + `cript>
     </body>
     </html>
   `);
