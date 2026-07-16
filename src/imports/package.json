@@ -1,0 +1,18 @@
+{
+  "name": "telemedicine-sync",
+  "version": "1.0.0",
+  "description": "Telemedicine Sync — WebRTC signaling backend and PWA front-end for secure peer-to-peer video consultations.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "peer": "^1.0.2"
+  }
+}
